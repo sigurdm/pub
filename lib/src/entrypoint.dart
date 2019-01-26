@@ -107,7 +107,7 @@ class Entrypoint {
 
     assertUpToDate();
     var packages = Map<String, Package>.fromIterable(lockFile.packages.values,
-        key: (id) => id.name, value: (id) => cache.load(id));
+        key: (id) => id.name, value: cache.load);
     packages[root.name] = root;
 
     _packageGraph = PackageGraph(this, lockFile, packages);
