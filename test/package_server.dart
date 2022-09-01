@@ -139,12 +139,22 @@ class PackageServer {
     );
   }
 
-  // Installs a handler at [pattern] that expects to be called exactly once with
-  // the given [method].
-  //
-  // The handler is installed as the start to give it priority over more general
-  // handlers.
-  void expect(String method, Pattern pattern, shelf.Handler handler) {
+  /// Installs a handler at [pattern] that expects to be called exactly once
+  /// with the given [method].
+  ///
+  /// The handler is installed at the start to give it priority over more
+  /// general handlers.
+  ///
+  /// The test framework will wait for the callback to run the [count] times
+  /// before it considers the current test to be complete.
+  ///
+  /// [max] can be used to specify an upper bound on the number of calls; if
+  /// this is exceeded the test will fail. If [max] is `0` (the default), the
+  /// callback is expected to be called exactly [count] times. If [max] is `-1`,
+  /// the callback is allowed to be called any number of times greater than
+  /// [count].
+  void expect(String method, Pattern pattern, shelf.Handler handler,
+      {int count = 1, int max = 0}) {
     handle(
       pattern,
       expectAsync1(
@@ -152,8 +162,16 @@ class PackageServer {
           test.expect(request.method, method);
           return handler(request);
         },
+        count: count,
+        max: max,
       ),
     );
+  }
+
+  /// Like [expect], but expects exactly `maxTestRetries + 1` requests.
+  void expectWithRetries(
+      String method, Pattern pattern, shelf.Handler handler) {
+    expect(method, pattern, handler, count: maxTestRetries + 1);
   }
 
   /// Returns the path of [package] at [version], installed from this server, in

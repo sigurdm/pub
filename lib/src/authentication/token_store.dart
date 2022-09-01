@@ -122,7 +122,7 @@ class TokenStore {
 
   /// Removes tokens with matching [hostedUrl] from store. Returns whether or
   /// not there's a stored token with matching url.
-  bool removeCredential(Uri hostedUrl) {
+  bool removeCredential(String hostedUrl) {
     final _credentials = _loadCredentials();
 
     var i = 0;
@@ -143,7 +143,7 @@ class TokenStore {
 
   /// Returns [Credential] for authenticating given [hostedUrl] or `null` if no
   /// matching credential is found.
-  Credential? findCredential(Uri hostedUrl) {
+  Credential? findCredential(String hostedUrl) {
     Credential? matchedCredential;
     for (final credential in credentials) {
       if (credential.url == hostedUrl && credential.isValid()) {
@@ -158,13 +158,12 @@ class TokenStore {
         }
       }
     }
-
     return matchedCredential;
   }
 
   /// Returns whether or not store contains a token that could be used for
   /// authenticating given [url].
-  bool hasCredential(Uri url) {
+  bool hasCredential(String url) {
     return credentials.any((it) => it.url == url && it.isValid());
   }
 

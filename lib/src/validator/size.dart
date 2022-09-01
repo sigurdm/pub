@@ -14,30 +14,28 @@ const _maxSize = 100 * 1024 * 1024;
 
 /// A validator that validates that a package isn't too big.
 class SizeValidator extends Validator {
-  final Future<int> packageSize;
+  final int packageSize;
 
   SizeValidator(Entrypoint entrypoint, this.packageSize) : super(entrypoint);
 
   @override
-  Future validate() {
-    return packageSize.then((size) {
-      if (size <= _maxSize) return;
-      var sizeInMb = (size / math.pow(2, 20)).toStringAsPrecision(4);
-      // Current implementation of Package.listFiles skips hidden files
-      var ignoreExists = fileExists(entrypoint.root.path('.gitignore'));
+  Future validate() async {
+    if (packageSize <= _maxSize) return;
+    var sizeInMb = (packageSize / math.pow(2, 20)).toStringAsPrecision(4);
+    // Current implementation of Package.listFiles skips hidden files
+    var ignoreExists = fileExists(entrypoint.root.path('.gitignore'));
 
-      var error = StringBuffer('Your package is $sizeInMb MB. Hosted '
-          'packages must be smaller than 100 MB.');
+    var error = StringBuffer('Your package is $sizeInMb MB. Hosted '
+        'packages must be smaller than 100 MB.');
 
-      if (ignoreExists && !entrypoint.root.inGitRepo) {
-        error.write(' Your .gitignore has no effect since your project '
-            'does not appear to be in version control.');
-      } else if (!ignoreExists && entrypoint.root.inGitRepo) {
-        error.write(' Consider adding a .gitignore to avoid including '
-            'temporary files.');
-      }
+    if (ignoreExists && !entrypoint.root.inGitRepo) {
+      error.write(' Your .gitignore has no effect since your project '
+          'does not appear to be in version control.');
+    } else if (!ignoreExists && entrypoint.root.inGitRepo) {
+      error.write(' Consider adding a .gitignore to avoid including '
+          'temporary files.');
+    }
 
-      errors.add(error.toString());
-    });
+    errors.add(error.toString());
   }
 }

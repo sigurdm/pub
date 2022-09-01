@@ -19,16 +19,6 @@ Future<void> main() async {
       ..serve('foo', '0.1.2')
       ..serve('bar', '1.2.3');
     await credentialsFile(globalServer, 'access token').create();
-    globalServer.handle(
-      RegExp('/api/packages/test_pkg/uploaders'),
-      (request) {
-        return shelf.Response.ok(
-            jsonEncode({
-              'success': {'message': 'Good job!'}
-            }),
-            headers: {'content-type': 'application/json'});
-      },
-    );
 
     await validPackage.create();
     await dir(appPath, [
@@ -74,7 +64,6 @@ main() => print('Hi');
       ['upgrade', 'bar', '-C', appPath],
       ['run', '-C', appPath, 'bin/app.dart'],
       ['publish', '-C', appPath, '--dry-run'],
-      ['uploader', '-C', appPath, 'add', 'sigurdm@google.com'],
       ['deps', '-C', appPath],
     ];
 

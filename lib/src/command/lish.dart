@@ -3,9 +3,11 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 
 import '../ascii_tree.dart' as tree;
 import '../authentication/client.dart';
@@ -83,112 +85,176 @@ class LishCommand extends PubCommand {
         abbr: 'C', help: 'Run this in the directory<dir>.', valueHelp: 'dir');
   }
 
-  Future<void> _publishUsingClient(
-    List<int> packageBytes,
-    http.Client client,
+  Future<void> _publish(
+    String packagePath,
+    Map<String, String> headers,
   ) async {
-    Uri? cloudStorageUrl;
-
     try {
       await log.progress('Uploading', () async {
-        var newUri = server.resolve('api/packages/versions/new');
-        var response = await client.get(newUri, headers: pubApiHeaders);
-        var parameters = parseJsonResponse(response);
+        final newUri = server.resolve('api/packages/versions/new');
+        late String responseBody;
+        late String cloudStorageUrl;
+        late Map<String, String> fields;
+        try {
+          await fetch(
+            newUri.toString(),
+            headers: {...pubApiHeaders, ...headers},
+            decode: (stream, headers) async {
+              responseBody = await decodeString(stream, headers);
+              late final Object? parameters;
+              // try {
+              parameters = jsonDecode(responseBody);
+              // } on FormatException {
+              //   invalidServerResponse(responseBody);
+              // }
+              if (parameters is! Map) invalidServerResponse(responseBody);
+              final url = _expectField<String>(parameters, 'url', responseBody);
+              final fieldsMap =
+                  _expectField<Map>(parameters, 'fields', responseBody);
+              fields = <String, String>{};
+              fieldsMap.forEach((key, value) {
+                if (value is! String) invalidServerResponse(responseBody);
+                fields[key] = value;
+              });
+              cloudStorageUrl = Uri.parse(url).toString();
+            },
+            decodeError: handleJsonError,
+          );
+        } on FetchException {
+          invalidServerResponse(responseBody);
+        }
 
-        var url = _expectField(parameters, 'url', response);
-        if (url is! String) invalidServerResponse(response);
-        cloudStorageUrl = Uri.parse(url);
         // TODO(nweiz): Cloud Storage can provide an XML-formatted error. We
         // should report that error and exit.
-        var request = http.MultipartRequest('POST', cloudStorageUrl!);
 
-        var fields = _expectField(parameters, 'fields', response);
-        if (fields is! Map) invalidServerResponse(response);
-        fields.forEach((key, value) {
-          if (value is! String) invalidServerResponse(response);
-          request.fields[key] = value;
-        });
+        final finalizeUploadUrl = await fetch(
+          cloudStorageUrl,
+          method: 'POST',
+          body: () async* {
+            final request = http.MultipartRequest(
+                // These args are never used. We construct the request just to
+                // get to the body.
+                'POST',
+                Uri.parse(cloudStorageUrl));
+            request.files.add(await http.MultipartFile.fromPath(
+                'file', packagePath,
+                filename: 'package.tar.gz'));
+            request.fields.addAll(fields);
+            yield* request.finalize();
+          },
+          decode: (stream, headers) async {
+            await stream.drain();
+            final location = headers['location'];
+            if (location == null) {
+              invalidServerResponse(
+                'Did not provide a location',
+              ); // TODO: better error
+            }
+            return Uri.parse(location).toString();
+          },
+          headers: {},
+          followRedirects: false,
+        );
 
-        request.followRedirects = false;
-        request.files.add(http.MultipartFile.fromBytes('file', packageBytes,
-            filename: 'package.tar.gz'));
-        var postResponse =
-            await http.Response.fromStream(await client.send(request));
+        final message = await fetch(
+          finalizeUploadUrl,
+          headers: pubApiHeaders,
+          decode: (stream, headers) async {
+            final responseBody = await utf8.decodeStream(stream);
+            final Object? response = jsonDecode(responseBody);
+            if (response is! Map ||
+                response['success'] is! Map ||
+                !response['success'].containsKey('message') ||
+                response['success']['message'] is! String) {
+              invalidServerResponse(responseBody);
+            }
 
-        var location = postResponse.headers['location'];
-        if (location == null) throw PubHttpException(postResponse);
-        handleJsonSuccess(
-            await client.get(Uri.parse(location), headers: pubApiHeaders));
+            return response['success']['message'];
+          },
+          decodeError: handleJsonError,
+        );
+
+        /// These response is expected to be of the form `{"success":
+        /// {"message": "some message"}}`. If the format is correct, the message
+        /// will be printed; otherwise an error will be raised.
+
+        log.message(log.green(message));
       });
-    } on AuthenticationException catch (error) {
-      var msg = '';
-      if (error.statusCode == 401) {
-        msg += '$server package repository requested authentication!\n'
-            'You can provide credentials using:\n'
-            '    pub token add $server\n';
+    } on FetchException catch (error) {
+      if (error is FetchExceptionWithResponse) {
+        final serverMessage = extractServerMessage(error.headers);
+        final serverMessagePart =
+            serverMessage?.isNotEmpty == true ? '\n$serverMessage\n' : '';
+        if (error.status == 401) {
+          dataError('$server package repository requested authentication!\n'
+              'You can provide credentials using:\n'
+              '    pub token add $server\n$serverMessagePart${log.red('Authentication failed!')}');
+        }
+        if (error.status == 403) {
+          dataError('Insufficient permissions to the resource at the $server '
+              'package repository.\nYou can modify credentials using:\n'
+              '    pub token add $server\n$serverMessagePart${log.red('Authentication failed!')}');
+        }
+        // TODO: what's here?
+        // var url = error.response.request!.url;
+        // if (url == cloudStorageUrl) {
+        //   // TODO(nweiz): the response may have XML-formatted information about
+        //   // the error. Try to parse that out once we have an easily-accessible
+        //   // XML parser.
+        //   fail(log.red('Failed to upload the package.'));
+        // } else if (Uri.parse(url.origin) == Uri.parse(server.origin)) {
+        //   handleJsonError(await http.Response.fromStream(error.body));
+        // } else {
+        //   rethrow;
+        // }
+        fail('${error.message}:\n${error.responseBody}');
       }
-      if (error.statusCode == 403) {
-        msg += 'Insufficient permissions to the resource at the $server '
-            'package repository.\nYou can modify credentials using:\n'
-            '    pub token add $server\n';
-      }
-      if (error.serverMessage != null) {
-        msg += '\n' + error.serverMessage! + '\n';
-      }
-      dataError(msg + log.red('Authentication failed!'));
-    } on PubHttpException catch (error) {
-      var url = error.response.request!.url;
-      if (url == cloudStorageUrl) {
-        // TODO(nweiz): the response may have XML-formatted information about
-        // the error. Try to parse that out once we have an easily-accessible
-        // XML parser.
-        fail(log.red('Failed to upload the package.'));
-      } else if (Uri.parse(url.origin) == Uri.parse(server.origin)) {
-        handleJsonError(error.response);
-      } else {
-        rethrow;
-      }
+      // final message = error.message;
+      // if (message != null) {
+      //   log.error(message);
+      // }
+      // final inner = error.innerException;
+      // if (inner != null) {
+      //   log.exception(inner);
+      // }
+
+      fail('${error.message}');
     }
   }
 
-  Future<void> _publish(List<int> packageBytes) async {
-    try {
-      final officialPubServers = {
-        'https://pub.dartlang.org',
-        'https://pub.dev',
+  Future<Map<String, String>> _getAuthorizationHeaders() async {
+    final officialPubServers = {
+      'https://pub.dartlang.org',
+      'https://pub.dev',
 
-        // Pub uses oauth2 credentials only for authenticating official pub
-        // servers for security purposes (to not expose pub.dev access token to
-        // 3rd party servers).
-        // For testing publish command we're using mock servers hosted on
-        // localhost address which is not a known pub server address. So we
-        // explicitly have to define mock servers as official server to test
-        // publish command with oauth2 credentials.
-        if (runningFromTest &&
-            Platform.environment.containsKey('PUB_HOSTED_URL') &&
-            Platform.environment['_PUB_TEST_AUTH_METHOD'] == 'oauth2')
-          Platform.environment['PUB_HOSTED_URL'],
+      // Pub uses oauth2 credentials only for authenticating official pub
+      // servers for security purposes (to not expose pub.dev access token to
+      // 3rd party servers).
+      // For testing publish command we're using mock servers hosted on
+      // localhost address which is not a known pub server address. So we
+      // explicitly have to define mock servers as official server to test
+      // publish command with oauth2 credentials.
+      if (runningFromTest &&
+          Platform.environment.containsKey('PUB_HOSTED_URL') &&
+          Platform.environment['_PUB_TEST_AUTH_METHOD'] == 'oauth2')
+        Platform.environment['PUB_HOSTED_URL'],
+    };
+
+    late final Map<String, String> headers;
+    // Use the credential token for the server if present.
+    final credential = cache.tokenStore.findCredential(server.toString());
+    if (credential != null) {
+      headers = {
+        'authorization': await credential.getAuthorizationHeaderValue()
       };
-
-      if (officialPubServers.contains(server.toString())) {
-        // Using OAuth2 authentication client for the official pub servers
-        await oauth2.withClient(cache, (client) {
-          return _publishUsingClient(packageBytes, client);
-        });
-      } else {
-        // For third party servers using bearer authentication client
-        await withAuthenticatedClient(cache, server, (client) {
-          return _publishUsingClient(packageBytes, client);
-        });
-      }
-    } on PubHttpException catch (error) {
-      var url = error.response.request!.url;
-      if (Uri.parse(url.origin) == Uri.parse(server.origin)) {
-        handleJsonError(error.response);
-      } else {
-        rethrow;
-      }
+    } else if (officialPubServers.contains(server.toString())) {
+      // Using OAuth2 authentication client for the official pub servers
+      final credentials = await oauth2.getCredentials(cache);
+      headers = {'authorization': 'Bearer ${credentials.accessToken}'};
+    } else {
+      headers = {};
     }
+    return headers;
   }
 
   @override
@@ -221,33 +287,46 @@ the \$PUB_HOSTED_URL environment variable.''',
     log.message('Publishing ${package.name} ${package.version} to $server:\n'
         '${tree.fromFiles(files, baseDir: entrypoint.root.dir)}');
 
-    var packageBytesFuture =
-        createTarGz(files, baseDir: entrypoint.root.dir).toBytes();
-
-    // Validate the package.
-    var isValid =
-        await _validate(packageBytesFuture.then((bytes) => bytes.length));
-    if (!isValid) {
-      overrideExitCode(exit_codes.DATA);
-      return;
-    } else if (dryRun) {
-      log.message('The server may enforce additional checks.');
-      return;
-    } else {
-      await _publish(await packageBytesFuture);
-    }
+    await withTempDir((dir) async {
+      final tempPackagePath = p.join(dir, 'package.tar.gz');
+      final file = File(p.join(dir, 'package.tar.gz'));
+      final sink = File(p.join(dir, 'package.tar.gz')).openWrite();
+      await sink.addStream(createTarGz(files, baseDir: entrypoint.root.dir));
+      await sink.close();
+      final size = file.statSync().size;
+      // Validate the package.
+      var isValid = await _validate(size);
+      if (!isValid) {
+        overrideExitCode(exit_codes.DATA);
+        return;
+      } else if (dryRun) {
+        log.message('The server may enforce additional checks.');
+        return;
+      } else {
+        await _publish(
+          tempPackagePath,
+          await _getAuthorizationHeaders(),
+        );
+      }
+    });
   }
 
   /// Returns the value associated with [key] in [map]. Throws a user-friendly
   /// error if [map] doesn't contain [key].
-  dynamic _expectField(Map map, String key, http.Response response) {
-    if (map.containsKey(key)) return map[key];
+  T _expectField<T>(Map map, String key, String response) {
+    if (map.containsKey(key)) {
+      final result = map[key];
+      if (result is! T) {
+        invalidServerResponse(response);
+      }
+      return result;
+    }
     invalidServerResponse(response);
   }
 
   /// Validates the package. Completes to false if the upload should not
   /// proceed.
-  Future<bool> _validate(Future<int> packageSize) async {
+  Future<bool> _validate(int packageSize) async {
     final hints = <String>[];
     final warnings = <String>[];
     final errors = <String>[];

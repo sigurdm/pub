@@ -19,16 +19,16 @@ void main() {
         () async {
       final server = await servePackages();
       server.serve('foo', '1.2.3');
-      server.expect(
-        'GET',
-        RegExp('/api/packages/.*'),
-        expectAsync1((request) {
-          return Response(200,
-              body: jsonEncode({
-                'notTheRight': {'response': 'type'}
-              }));
-        }),
-      );
+      server.expectWithRetries('GET', RegExp('/api/packages/.*'), (request) {
+        return Response(
+          200,
+          body: jsonEncode(
+            {
+              'notTheRight': {'response': 'type'}
+            },
+          ),
+        );
+      });
       await d.appDir({'foo': '1.2.3'}).create();
 
       await pubCommand(command,
@@ -44,7 +44,7 @@ void main() {
   testWithGolden('bad_json', (ctx) async {
     final server = await servePackages();
     server.serve('foo', '1.2.3');
-    server.expect('GET', RegExp('/api/packages/.*'), (request) {
+    server.expectWithRetries('GET', RegExp('/api/packages/.*'), (request) {
       return Response(200,
           body: jsonEncode({
             'notTheRight': {'response': 'type'}

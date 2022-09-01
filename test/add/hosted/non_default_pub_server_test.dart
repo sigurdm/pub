@@ -87,7 +87,8 @@ void main() {
 
     await pubAdd(
       args: ['foo', '--hosted-url', 'https://invalid-url.foo'],
-      error: contains('Could not resolve URL "https://invalid-url.foo".'),
+      error: contains(
+          'Because myapp depends on foo any which doesn\'t exist (network error trying to find package foo at https://invalid-url.foo), version solving failed.\n'),
       exitCode: exit_codes.DATA,
       environment: {
         // Limit the retries - the url will never go valid.

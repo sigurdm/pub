@@ -121,7 +121,7 @@ abstract class Validator {
   /// package, in bytes. This is used to validate that it's not too big to
   /// upload to the server.
   static Future<void> runAll(
-      Entrypoint entrypoint, Future<int> packageSize, Uri? serverUrl,
+      Entrypoint entrypoint, int packageSize, Uri? serverUrl,
       {required List<String> hints,
       required List<String> warnings,
       required List<String> errors}) {

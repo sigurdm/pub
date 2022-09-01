@@ -46,6 +46,8 @@ MSG : Logs written to $SANDBOX/cache/log/pub_log.txt.
 [E]    | X-Pub-Environment: test-environment
 [E]    | X-Pub-Reason: direct
 [E]    | user-agent: Dart pub 0.1.2+3
+[E] IO  : Creating $FILE from stream
+[E] FINE: Created $FILE from stream
 [E] IO  : HTTP response 200 OK for GET http://localhost:$PORT/packages/foo/versions/1.0.0.tar.gz
 [E]    | took: $TIME
 [E]    | transfer-encoding: chunked
@@ -55,8 +57,6 @@ MSG : Logs written to $SANDBOX/cache/log/pub_log.txt.
 [E]    | x-xss-protection: 1; mode=block
 [E]    | x-content-type-options: nosniff
 [E]    | server: dart:io with Shelf
-[E] IO  : Creating $FILE from stream
-[E] FINE: Created $FILE from stream
 [E] IO  : Created temp directory $DIR
 [E] IO  : Reading binary file $FILE.
 [E] FINE: Extracting .tar.gz stream to $DIR
@@ -184,6 +184,8 @@ IO  : HTTP GET http://localhost:$PORT/packages/foo/versions/1.0.0.tar.gz
    | X-Pub-Environment: test-environment
    | X-Pub-Reason: direct
    | user-agent: Dart pub 0.1.2+3
+IO  : Creating $FILE from stream
+FINE: Created $FILE from stream
 IO  : HTTP response 200 OK for GET http://localhost:$PORT/packages/foo/versions/1.0.0.tar.gz
    | took: $TIME
    | transfer-encoding: chunked
@@ -193,8 +195,6 @@ IO  : HTTP response 200 OK for GET http://localhost:$PORT/packages/foo/versions/
    | x-xss-protection: 1; mode=block
    | x-content-type-options: nosniff
    | server: dart:io with Shelf
-IO  : Creating $FILE from stream
-FINE: Created $FILE from stream
 IO  : Created temp directory $DIR
 IO  : Reading binary file $FILE.
 FINE: Extracting .tar.gz stream to $DIR

@@ -410,6 +410,8 @@ String _pathInSandbox(String relPath) => p.join(d.sandbox, relPath);
 
 String testVersion = '0.1.2+3';
 
+int maxTestRetries = 1;
+
 /// Gets the environment variables used to run pub in a test context.
 Map<String, String> getPubTestEnvironment([String? tokenEndpoint]) => {
       'CI': 'false', // unless explicitly given tests don't run pub in CI mode
@@ -417,6 +419,7 @@ Map<String, String> getPubTestEnvironment([String? tokenEndpoint]) => {
       '_PUB_TEST_CONFIG_DIR': _pathInSandbox(configPath),
       'PUB_CACHE': _pathInSandbox(cachePath),
       'PUB_ENVIRONMENT': 'test-environment',
+      'PUB_MAX_HTTP_RETRIES': maxTestRetries.toString(),
 
       // Ensure a known SDK version is set for the tests that rely on that.
       '_PUB_TEST_SDK_VERSION': testVersion,

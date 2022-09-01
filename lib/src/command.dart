@@ -233,7 +233,7 @@ and attaching the relevant parts of that log file.
           log.message('Logs written to $transcriptPath.');
         }
       }
-      httpClient.close();
+      innerHttpClient.close();
     }
   }
 
@@ -252,7 +252,7 @@ and attaching the relevant parts of that log file.
         exception is http.ClientException ||
         exception is SocketException ||
         exception is TlsException ||
-        exception is PubHttpException ||
+        exception is FetchException ||
         exception is git.GitException ||
         exception is PackageNotFoundException) {
       return exit_codes.UNAVAILABLE;

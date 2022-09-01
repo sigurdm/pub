@@ -93,58 +93,44 @@ void logout(SystemCache cache) {
   }
 }
 
-/// Asynchronously passes an OAuth2 [Client] to [fn].
-///
-/// Does not close the client, since that would close the shared client. It must
-/// be closed elsewhere.
-///
-/// This takes care of loading and saving the client's credentials, as well as
-/// prompting the user for their authorization. It will also re-authorize and
-/// re-run [fn] if a recoverable authorization error is detected.
-Future<T> withClient<T>(SystemCache cache, Future<T> Function(Client) fn) {
-  return _getClient(cache).then((client) {
-    return fn(client).whenComplete(() {
-      // TODO(sigurdm): refactor the http subsystem, so we can close [client]
-      // here.
-
-      // Be sure to save the credentials even when an error happens.
-      _saveCredentials(cache, client.credentials);
-    });
-  }).catchError((error) {
-    if (error is ExpirationException) {
-      log.error("Pub's authorization to upload packages has expired and "
-          "can't be automatically refreshed.");
-      return withClient(cache, fn);
-    } else if (error is AuthorizationException) {
-      var message = 'OAuth2 authorization failed';
-      if (error.description != null) {
-        message = '$message (${error.description})';
-      }
-      log.error('$message.');
-      _clearCredentials(cache);
-      return withClient(cache, fn);
-    } else {
-      throw error;
-    }
-  });
-}
-
-/// Gets a new OAuth2 client.
+/// Gets Oauth2 credentials.
 ///
 /// If saved credentials are available, those are used; otherwise, the user is
-/// prompted to authorize the pub client.
-Future<Client> _getClient(SystemCache cache) async {
+/// prompted to authorize the pub client. In this case the credentials are
+/// saved.
+Future<Credentials> getCredentials(SystemCache cache) async {
   var credentials = loadCredentials(cache);
-  if (credentials == null) return await _authorize();
+  try {
+    credentials ??= await _authorize();
+  } on AuthorizationException catch (e) {
+    var message = 'OAuth2 authorization failed';
+    if (e.description != null) {
+      message = '$message (${e.description})';
+    }
+    log.error('$message.');
+    _clearCredentials(cache);
+    return getCredentials(cache);
+  } on ExpirationException {
+    // _clearCredentials(cache); // TODO: (should we not clear here?)
+    log.error("Pub's authorization to upload packages has expired and "
+        "can't be automatically refreshed.");
+    return getCredentials(cache);
+  }
 
-  var client = Client(credentials,
+  if (credentials.isExpired) {
+    if (!credentials.canRefresh) {
+      throw ExpirationException(credentials);
+    }
+    credentials = await credentials.refresh(
       identifier: _identifier,
       secret: _secret,
-      // Google's OAuth2 API doesn't support basic auth.
       basicAuth: false,
-      httpClient: httpClient);
-  _saveCredentials(cache, client.credentials);
-  return client;
+      httpClient: innerHttpClient,
+    );
+  }
+  // Be sure to save the credentials even when an error happens.
+  _saveCredentials(cache, credentials);
+  return credentials;
 }
 
 /// Loads the user's OAuth2 credentials from the in-memory cache or the
@@ -214,19 +200,20 @@ String _legacyCredentialsFile(SystemCache cache) {
 
 /// Gets the user to authorize pub as a client of pub.dartlang.org via oauth2.
 ///
-/// Returns a Future that completes to a fully-authorized [Client].
-Future<Client> _authorize() async {
-  var grant =
-      AuthorizationCodeGrant(_identifier, _authorizationEndpoint, tokenEndpoint,
-          secret: _secret,
-          // Google's OAuth2 API doesn't support basic auth.
-          basicAuth: false,
-          httpClient: httpClient);
+/// Returns a Future that completes to a fully-authorized [Credentials].
+Future<Credentials> _authorize() async {
+  var grant = AuthorizationCodeGrant(
+    _identifier, _authorizationEndpoint, tokenEndpoint,
+    secret: _secret,
+    // Google's OAuth2 API doesn't support basic auth.
+    basicAuth: false,
+    httpClient: innerHttpClient,
+  );
 
   // Spin up a one-shot HTTP server to receive the authorization code from the
   // Google OAuth2 server via redirect. This server will close itself as soon as
   // the code is received.
-  var completer = Completer();
+  var completer = Completer<Client>();
   var server = await bindServer('localhost', 0);
   shelf_io.serveRequests(server, (request) {
     if (request.url.path.isNotEmpty) {
@@ -244,9 +231,10 @@ Future<Client> _authorize() async {
     return shelf.Response.found('https://pub.dartlang.org/authorized');
   });
 
-  var authUrl = grant.getAuthorizationUrl(
-      Uri.parse('http://localhost:${server.port}'),
-      scopes: _scopes);
+  final authUrl = grant.getAuthorizationUrl(
+    Uri.parse('http://localhost:${server.port}'),
+    scopes: _scopes,
+  );
 
   log.message(
       'Pub needs your authorization to upload packages on your behalf.\n'
@@ -254,7 +242,9 @@ Future<Client> _authorize() async {
       'Then click "Allow access".\n\n'
       'Waiting for your authorization...');
 
-  var client = await completer.future;
+  final client = await completer.future;
+
   log.message('Successfully authorized.\n');
-  return client;
+
+  return client.credentials;
 }

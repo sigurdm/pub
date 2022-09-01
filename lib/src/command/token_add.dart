@@ -66,7 +66,7 @@ class TokenAddCommand extends PubCommand {
       usageException('Token is not provided.');
     }
 
-    tokenStore.addCredential(Credential.token(hostedUrl, token));
+    tokenStore.addCredential(Credential.token(hostedUrl.toString(), token));
     log.message(
       'Requests to "$hostedUrl" will now be authenticated using the secret '
       'token.',
@@ -101,7 +101,7 @@ class TokenAddCommand extends PubCommand {
       );
     }
 
-    tokenStore.addCredential(Credential.env(hostedUrl, envVar));
+    tokenStore.addCredential(Credential.env(hostedUrl.toString(), envVar));
     log.message(
       'Requests to "$hostedUrl" will now be authenticated using the secret '
       'token stored in the environment variable "$envVar".',

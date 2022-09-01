@@ -6,10 +6,6 @@ import 'dart:async';
 import 'dart:io';
 
 import '../command.dart';
-import '../exit_codes.dart' as exit_codes;
-import '../http.dart';
-import '../log.dart' as log;
-import '../oauth2.dart' as oauth2;
 
 /// Handles the `uploader` pub command.
 class UploaderCommand extends PubCommand {
@@ -40,59 +36,5 @@ class UploaderCommand extends PubCommand {
   }
 
   @override
-  Future<void> runProtected() async {
-    if (argResults.wasParsed('server')) {
-      await log.warningsOnlyUnlessTerminal(() {
-        log.message(
-          '''
-The --server option is deprecated. Use `publish_to` in your pubspec.yaml or set
-the \$PUB_HOSTED_URL environment variable.''',
-        );
-      });
-    }
-    if (argResults.rest.isEmpty) {
-      log.error('No uploader command given.');
-      printUsage();
-      overrideExitCode(exit_codes.USAGE);
-      return;
-    }
-
-    var rest = argResults.rest.toList();
-
-    // TODO(rnystrom): Use subcommands for these.
-    var command = rest.removeAt(0);
-    if (!['add', 'remove'].contains(command)) {
-      log.error('Unknown uploader command "$command".');
-      printUsage();
-      overrideExitCode(exit_codes.USAGE);
-      return;
-    } else if (rest.isEmpty) {
-      log.error('No uploader given for "pub uploader $command".');
-      printUsage();
-      overrideExitCode(exit_codes.USAGE);
-      return;
-    }
-
-    final package = argResults['package'] ?? entrypoint.root.name;
-    final uploader = rest[0];
-    try {
-      final response = await oauth2.withClient(cache, (client) {
-        if (command == 'add') {
-          var url = server.resolve('/api/packages/'
-              '${Uri.encodeComponent(package)}/uploaders');
-          return client
-              .post(url, headers: pubApiHeaders, body: {'email': uploader});
-        } else {
-          // command == 'remove'
-          var url = server.resolve('/api/packages/'
-              '${Uri.encodeComponent(package)}/uploaders/'
-              '${Uri.encodeComponent(uploader)}');
-          return client.delete(url, headers: pubApiHeaders);
-        }
-      });
-      handleJsonSuccess(response);
-    } on PubHttpException catch (error) {
-      handleJsonError(error.response);
-    }
-  }
+  Future<void> runProtected() async {}
 }

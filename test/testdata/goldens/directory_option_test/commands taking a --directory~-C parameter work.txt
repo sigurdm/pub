@@ -113,12 +113,6 @@ The server may enforce additional checks.
 -------------------------------- END OF OUTPUT ---------------------------------
 
 ## Section 12
-$ pub uploader -C myapp add sigurdm@google.com
-Good job!
-
--------------------------------- END OF OUTPUT ---------------------------------
-
-## Section 13
 $ pub deps -C myapp
 Dart SDK 1.12.0
 test_pkg 1.0.0

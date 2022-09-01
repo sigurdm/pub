@@ -19,7 +19,8 @@ void main() {
     await confirmPublish(pub);
 
     globalServer.expect('GET', '/api/packages/versions/new',
-        (request) => shelf.Response.ok('{not json'));
+        (request) => shelf.Response.ok('{not json'),
+        count: maxTestRetries);
 
     expect(
         pub.stderr,

@@ -8,7 +8,6 @@ import 'dart:io' as io;
 
 import 'package:collection/collection.dart'
     show maxBy, IterableNullableExtension;
-import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:pub_semver/pub_semver.dart';
 import 'package:stack_trace/stack_trace.dart';
@@ -371,24 +370,25 @@ class BoundHostedSource extends CachedSource {
     final url = _listVersionsUrl(ref.description);
     log.io('Get versions from $url.');
 
-    late final String bodyText;
-    late final dynamic body;
-    late final Map<PackageId, _VersionInfo> result;
+    late String bodyText;
+    late Map<String, dynamic> body;
+    late Map<PackageId, _VersionInfo> result;
     try {
-      // TODO(sigurdm): Implement cancellation of requests. This probably
-      // requires resolution of: https://github.com/dart-lang/sdk/issues/22265.
-      bodyText = await withAuthenticatedClient(
-        systemCache,
-        serverUrl,
-        (client) => client.read(url, headers: pubApiHeaders),
+      await fetch(
+        url.toString(),
+        headers: await addAuthHeader(pubApiHeaders, systemCache,
+            hostedUrl: serverUrl.toString(), urlToFetch: url.toString()),
+        decode: (stream, headers) async {
+          bodyText = await utf8.decodeStream(stream);
+          final decoded = jsonDecode(bodyText);
+          if (decoded is! Map<String, dynamic>) {
+            throw FormatException('version listing must be a mapping');
+          }
+          body = decoded;
+          result = _versionInfoFromPackageListing(body, ref, url);
+        },
       );
-      final decoded = jsonDecode(bodyText);
-      if (decoded is! Map<String, dynamic>) {
-        throw FormatException('version listing must be a mapping');
-      }
-      body = decoded;
-      result = _versionInfoFromPackageListing(body, ref, url);
-    } on Exception catch (error, stackTrace) {
+    } on FetchException catch (error, stackTrace) {
       final packageName = source._asDescription(ref.description).packageName;
       _throwFriendlyError(error, stackTrace, packageName, serverUrl);
     }
@@ -785,17 +785,24 @@ class BoundHostedSource extends CachedSource {
     await withTempDir((tempDirForArchive) async {
       var archivePath =
           p.join(tempDirForArchive, '$packageName-$version.tar.gz');
-      var response = await withAuthenticatedClient(systemCache, server,
-          (client) => client.send(http.Request('GET', url)));
+      await fetch(
+        url.toString(),
+        headers: await addAuthHeader(
+          {},
+          systemCache,
+          hostedUrl: server.toString(),
+          urlToFetch: url.toString(),
+        ),
+        decode: (stream, headers) => createFileFromStream(stream, archivePath),
+      );
 
       // We download the archive to disk instead of streaming it directly into
       // the tar unpacking. This simplifies stream handling.
       // Package:tar cancels the stream when it reaches end-of-archive, and
       // cancelling a http stream makes it not reusable.
       // There are ways around this, and we might revisit this later.
-      await createFileFromStream(response.stream, archivePath);
       var tempDir = systemCache.createTempDir();
-      await extractTarGz(readBinaryFileAsSream(archivePath), tempDir);
+      await extractTarGz(readBinaryFileAsStream(archivePath), tempDir);
 
       // Now that the get has succeeded, move it to the real location in the
       // cache.
@@ -812,62 +819,71 @@ class BoundHostedSource extends CachedSource {
   ///
   /// Always throws an error, either the original one or a better one.
   Never _throwFriendlyError(
-    Exception error,
+    FetchException error,
     StackTrace stackTrace,
     String package,
     Uri hostedUrl,
   ) {
-    if (error is PubHttpException) {
-      if (error.response.statusCode == 404) {
+    if (error is FetchExceptionWithResponse) {
+      final serverMessage = extractServerMessage(error.headers);
+      String messagePart =
+          serverMessage?.isNotEmpty == true ? '\n$serverMessage' : '';
+      if (error.status == 404) {
         throw PackageNotFoundException(
             'could not find package $package at $hostedUrl',
             innerError: error,
             innerTrace: stackTrace);
+      } else if (error.status == 401) {
+        final removed =
+            systemCache.tokenStore.removeCredential(hostedUrl.toString());
+        if (removed) {
+          log.warning('Invalid token for $hostedUrl deleted.');
+        }
+        throw PackageNotFoundException(
+          'authentication failed',
+          hint: '$hostedUrl package repository requested authentication!\n'
+              'You can provide credentials using:\n'
+              '    pub token add $hostedUrl$messagePart',
+        );
+      } else if (error.status == 403) {
+        throw PackageNotFoundException(
+          'authorization failed',
+          hint: 'Insufficient permissions to the resource at the $hostedUrl '
+              'package repository.\nYou can modify credentials using:\n'
+              '    pub token add $hostedUrl$messagePart',
+        );
       }
-
+      final message = error.message;
+      if (message != null) {
+        fail(message);
+      }
       fail(
-          '${error.response.statusCode} ${error.response.reasonPhrase} trying '
-          'to find package $package at $hostedUrl.',
+          '${error.status} ${error.reasonPhrase} trying to find package $package at $hostedUrl.',
           error,
           stackTrace);
-    } else if (error is io.SocketException) {
-      fail('Got socket error trying to find package $package at $hostedUrl.',
-          error, stackTrace);
-    } else if (error is io.TlsException) {
-      fail('Got TLS error trying to find package $package at $hostedUrl.',
-          error, stackTrace);
-    } else if (error is AuthenticationException) {
-      String? hint;
-      var message = 'authentication failed';
-
-      assert(error.statusCode == 401 || error.statusCode == 403);
-      if (error.statusCode == 401) {
-        hint = '$hostedUrl package repository requested authentication!\n'
-            'You can provide credentials using:\n'
-            '    pub token add $hostedUrl';
-      }
-      if (error.statusCode == 403) {
-        hint = 'Insufficient permissions to the resource at the $hostedUrl '
-            'package repository.\nYou can modify credentials using:\n'
-            '    pub token add $hostedUrl';
-        message = 'authorization failed';
-      }
-
-      if (error.serverMessage?.isNotEmpty == true && hint != null) {
-        hint += '\n${error.serverMessage}';
-      }
-
-      throw PackageNotFoundException(message, hint: hint);
-    } else if (error is FormatException) {
+    } else if (error.innerException is io.SocketException) {
+      throw PackageNotFoundException(
+          'network error trying to find package $package at $hostedUrl',
+          innerError: error.innerException,
+          innerTrace: error.innerStackTrace,
+          hint:
+              'Check your network connection, and that "$hostedUrl" is spelled correctly.');
+    } else if (error.innerException is io.TlsException) {
+      fail(
+        'Got TLS error trying to find package $package at $hostedUrl.',
+        error.innerException,
+        error.innerStackTrace,
+      );
+    } else if (error.innerException is FormatException) {
       throw PackageNotFoundException(
         'Got badly formatted response trying to find package $package at $hostedUrl',
-        innerError: error,
-        innerTrace: stackTrace,
+        innerError: error.innerException,
+        innerTrace: error.innerStackTrace,
         hint: 'Check that "$hostedUrl" is a valid package repository.',
       );
     } else {
       // Otherwise re-throw the original exception.
-      throw error;
+      throw error.innerException ?? error;
     }
   }
 

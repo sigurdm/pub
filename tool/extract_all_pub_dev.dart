@@ -10,7 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 import 'package:pool/pool.dart';
 import 'package:pub/src/http.dart';
 import 'package:pub/src/io.dart';
@@ -19,14 +19,17 @@ const statusFilename = 'extract_all_pub_status.json';
 
 Future<List<String>> allPackageNames() async {
   var nextUrl = Uri.https('pub.dev', 'api/packages?compact=1');
-  final result = json.decode(await httpClient.read(nextUrl));
-  return List<String>.from(result['packages']);
+  final result =
+      await fetch(nextUrl.toString(), headers: {}, decode: parseJsonResponse);
+  return List<String>.from(result['packages'] as List);
 }
 
 Future<List<String>> versionArchiveUrls(String packageName) async {
   final url = Uri.https('pub.dev', 'api/packages/$packageName');
-  final result = json.decode(await httpClient.read(url));
-  return List<String>.from(result['versions'].map((v) => v['archive_url']));
+  final result =
+      await fetch(url.toString(), headers: {}, decode: parseJsonResponse);
+  return List<String>.from(
+      (result['versions'] as List).map((v) => v['archive_url']));
 }
 
 Future<void> main() async {
@@ -78,11 +81,15 @@ Future<void> main() async {
           await Future.wait(versions.map((archiveUrl) async {
             await withTempDir((tempDir) async {
               print('downloading $archiveUrl');
-              http.StreamedResponse response;
               try {
-                response = await httpClient
-                    .send(http.Request('GET', Uri.parse(archiveUrl)));
-                await extractTarGz(response.stream, tempDir);
+                await fetch(
+                  archiveUrl,
+                  headers: {},
+                  decode: (stream, headers) async {
+                    await extractTarGz(
+                        stream, p.join(tempDir, 'archive.tar.gz'));
+                  },
+                );
                 print('Extracted $archiveUrl');
               } catch (e, _) {
                 print('Failed to get and extract $archiveUrl $e');

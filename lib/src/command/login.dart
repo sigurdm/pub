@@ -3,12 +3,12 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:convert';
 
 import '../command.dart';
 import '../http.dart';
 import '../log.dart' as log;
 import '../oauth2.dart' as oauth2;
+import '../utils.dart';
 
 /// Handles the `login` pub command.
 class LoginCommand extends PubCommand {
@@ -24,34 +24,42 @@ class LoginCommand extends PubCommand {
   @override
   Future<void> runProtected() async {
     final credentials = oauth2.loadCredentials(cache);
+    final userInfo = await _retrieveUserInfo();
+    if (userInfo == null) {
+      fail('Your credentials seems broken.\n'
+          'Run `pub logout` to delete your credentials  and try again.');
+    }
     if (credentials == null) {
-      final userInfo = await _retrieveUserInfo();
       log.message('You are now logged in as $userInfo');
     } else {
-      final userInfo = await _retrieveUserInfo();
-      if (userInfo == null) {
-        log.warning('Your credentials seems broken.\n'
-            'Run `pub logout` to delete your credentials  and try again.');
-      }
       log.warning('You are already logged in as $userInfo\n'
           'Run `pub logout` to log out and try again.');
     }
   }
 
   Future<_UserInfo?> _retrieveUserInfo() async {
-    return await oauth2.withClient(cache, (client) async {
-      final discovery = await httpClient.get(Uri.https(
-          'accounts.google.com', '/.well-known/openid-configuration'));
-      final userInfoEndpoint = json.decode(discovery.body)['userinfo_endpoint'];
-      final userInfoRequest = await client.get(Uri.parse(userInfoEndpoint));
-      if (userInfoRequest.statusCode != 200) return null;
-      try {
-        final userInfo = json.decode(userInfoRequest.body);
-        return _UserInfo(userInfo['name'], userInfo['email']);
-      } on FormatException {
-        return null;
-      }
-    });
+    final credentials = await oauth2.getCredentials(cache);
+    print(credentials.accessToken);
+    try {
+      final discovery = await fetch(
+          'https://accounts.google.com/.well-known/openid-configuration',
+          headers: {}, //{'authorization': 'Bearer ${credentials.accessToken}'},
+          decode: parseJsonResponse);
+      final userInfoEndpoint = discovery['userinfo_endpoint'];
+      print(userInfoEndpoint);
+      if (userInfoEndpoint is! String) return null;
+      final userInfo = await fetch(userInfoEndpoint,
+          headers: {'authorization': 'Bearer ${credentials.accessToken}'},
+          decode: parseJsonResponse);
+      print(userInfo);
+      final name = userInfo['name'];
+      final email = userInfo['email'];
+      if (name is! String || email is! String) return null;
+      return _UserInfo(name, email);
+    } on FetchException catch (e) {
+      print(e);
+      return null;
+    }
   }
 }
 

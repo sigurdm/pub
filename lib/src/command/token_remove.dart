@@ -46,7 +46,7 @@ class TokenRemoveCommand extends PubCommand {
 
     try {
       final hostedUrl = validateAndNormalizeHostedUrl(argResults.rest.first);
-      final found = tokenStore.removeCredential(hostedUrl);
+      final found = tokenStore.removeCredential(hostedUrl.toString());
 
       if (found) {
         log.message('Removed secret token for package repository: $hostedUrl');

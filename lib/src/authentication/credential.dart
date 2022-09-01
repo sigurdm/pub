@@ -69,7 +69,7 @@ class Credential {
     }
 
     return Credential._internal(
-      url: hostedUrl,
+      url: hostedUrl.toString(),
       unknownFields: unknownFields,
       token: _string('token'),
       env: _string('env'),
@@ -77,7 +77,7 @@ class Credential {
   }
 
   /// Server url which this token authenticates.
-  final Uri url;
+  final String url;
 
   /// Authentication token value
   final String? token;

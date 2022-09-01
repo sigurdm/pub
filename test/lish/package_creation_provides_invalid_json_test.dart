@@ -21,14 +21,11 @@ void main() {
     handleUploadForm(globalServer);
     handleUpload(globalServer);
 
-    globalServer.expect('GET', '/create', (request) {
+    globalServer.expectWithRetries('GET', '/create', (request) {
       return shelf.Response.ok('{not json');
     });
 
-    expect(
-        pub.stderr,
-        emitsLines('Invalid server response:\n'
-            '{not json'));
+    expect(pub.stderr, emits('Invalid server response.'));
     await pub.shouldExit(1);
   });
 }

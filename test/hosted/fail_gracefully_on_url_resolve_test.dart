@@ -20,7 +20,14 @@ void main() {
       ]).create();
 
       await pubCommand(command,
-          error: 'Could not resolve URL "https://invalid-url.foo".',
+          error: allOf([
+            contains(
+                'Because myapp depends on foo any which doesn\'t exist (network error trying to find package foo at https://invalid-url.foo), version solving failed.'),
+            contains(
+                'Check your network connection, and that "https://invalid-url.foo" is spelled correctly.')
+          ]),
+          silent: contains(
+              'Retrying fetching https://invalid-url.foo/api/packages/foo (Caught connection error)'),
           exitCode: exit_codes.UNAVAILABLE,
           environment: {
             'PUB_MAX_HTTP_RETRIES': '2',
