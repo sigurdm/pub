@@ -52,8 +52,7 @@ class DependencyIncompatibilityCause extends IncompatibilityCause {
       if (targetConstraint is Version) {
         return '''
 Note: ${target.name} is pinned to version $targetConstraint by ${depender.name} from the ${dependerDescription.sdk} SDK.
-See https://dart.dev/go/sdk-version-pinning for details.
-''';
+See https://dart.dev/go/sdk-version-pinning for details.''';
       }
     }
     return null;
