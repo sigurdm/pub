@@ -200,6 +200,16 @@ String _resolveLink(String link) {
 String readTextFile(String file) => File(file).readAsStringSync();
 
 /// Reads the contents of the text file [file].
+/// Returns `null` if the file could not be read.
+String? tryReadTextFile(String file) {
+  try {
+    return File(file).readAsStringSync();
+  } on FileException {
+    return null;
+  }
+}
+
+/// Reads the contents of the text file [file].
 Future<String> readTextFileAsync(String file) {
   return _descriptorPool.withResource(() => File(file).readAsString());
 }

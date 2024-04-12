@@ -769,8 +769,8 @@ try:
     // See if the binstub already exists. If so, it's for another package
     // since we already deleted all of this package's binstubs.
     String? previousPackage;
-    if (fileExists(binStubPath)) {
-      var contents = readTextFile(binStubPath);
+    final contents = tryReadTextFile(binStubPath);
+    if (contents != null) {
       previousPackage = _binStubProperty(contents, 'Package');
       if (previousPackage == null) {
         log.fine('Could not parse binstub $binStubPath:\n$contents');
@@ -778,6 +778,7 @@ try:
         return previousPackage;
       }
     }
+
     // When running tests we want the binstub to invoke the current pub, not the
     // one from the sdk.
     final pubInvocation =
@@ -845,7 +846,7 @@ fi
     // it into place afterwards to avoid races.
     final tempDir = cache.createTempDir();
     try {
-      final tmpPath = p.join(tempDir, binStubPath);
+      final tmpPath = p.join(tempDir, executable);
 
       // Write this as the system encoding since the system is going to
       // execute it and it might contain non-ASCII characters in the
