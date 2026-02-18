@@ -27,6 +27,7 @@ import 'error_group.dart';
 import 'exceptions.dart';
 import 'exit_codes.dart' as exit_codes;
 import 'log.dart' as log;
+import 'sdk/flutter.dart';
 import 'utils.dart';
 
 export 'package:http/http.dart' show ByteStream;
@@ -679,8 +680,7 @@ final bool _assertionsEnabled = () {
 }();
 
 final bool runningFromFlutter =
-    Platform.environment.containsKey('PUB_ENVIRONMENT') &&
-    (Platform.environment['PUB_ENVIRONMENT'] ?? '').contains('flutter_cli');
+    FlutterSdk().isAvailable;
 
 /// A regular expression to match the script path of a pub script running from
 /// source in the Dart repo.

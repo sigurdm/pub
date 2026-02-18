@@ -782,8 +782,6 @@ Future<void> main() async {
       environment: {
         'FLUTTER_ROOT': d.path('flutter-root'),
         '_PUB_TEST_SDK_VERSION': '2.13.0',
-        // To test that the reproduction command is reflected correctly.
-        'PUB_ENVIRONMENT': 'flutter_cli:get',
       },
     );
   });

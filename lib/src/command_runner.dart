@@ -40,10 +40,8 @@ import 'utils.dart';
 
 /// The name of the program that is invoking pub
 /// 'flutter' if we are running inside `flutter pub` 'dart' otherwise.
-String topLevelProgram = _isRunningInsideFlutter ? 'flutter' : 'dart';
+String topLevelProgram = runningFromFlutter ? 'flutter' : 'dart';
 
-bool _isRunningInsideFlutter = (Platform.environment['PUB_ENVIRONMENT'] ?? '')
-    .contains('flutter_cli');
 
 class PubCommandRunner extends CommandRunner<int> implements PubTopLevel {
   @override

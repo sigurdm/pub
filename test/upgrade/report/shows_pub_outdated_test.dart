@@ -2,6 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 import '../../descriptor.dart' as d;
@@ -49,8 +50,9 @@ Try `dart pub outdated` for more information.$''', multiLine: true),
     );
 
     // Running inside Flutter this will recommend the Flutter variant.
+    await d.dir('flutter', [d.flutterVersion('1.2.3')]).create();
     await pubUpgrade(
-      environment: {'PUB_ENVIRONMENT': 'flutter_cli:get'},
+      environment: {'FLUTTER_ROOT': p.join(d.sandbox, 'flutter')},
       output: RegExp(r'''
 3 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.$''', multiLine: true),

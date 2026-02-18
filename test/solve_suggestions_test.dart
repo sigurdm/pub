@@ -34,7 +34,6 @@ void main() {
         '_PUB_TEST_SDK_VERSION': '2.17.0',
         'FLUTTER_ROOT': path('flutter'),
         '_PUB_TEST_FLUTTER_RELEASES_URL': '${server.url}/flutterReleases',
-        'PUB_ENVIRONMENT': 'flutter_cli',
       },
     );
   });
