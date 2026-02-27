@@ -1,0 +1,9 @@
+import 'dart:io';
+
+import 'package:pub/src/io.dart';
+
+main() {
+  final s = createTarGz(Directory('.').listSync().map((f) => f.path).toList());
+  final f = File('out.tar.gz').openWrite();
+  f.addStream(s);
+}
