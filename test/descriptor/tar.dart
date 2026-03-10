@@ -31,8 +31,10 @@ class TarFileDescriptor extends FileDescriptor {
         includeHidden: true,
         includeDirs: false,
       );
-      final bytes =
-          await createTarGz(createdContents, baseDir: tempDir).toBytes();
+      final bytes = await createTarGz(
+        createdContents,
+        baseDir: tempDir,
+      ).toBytes();
 
       final file = p.join(parent ?? sandbox, name);
       _writeBinaryFile(file, bytes);

@@ -162,10 +162,9 @@ abstract class PubCommand extends Command<int> {
   /// Short description of how the arguments should be provided in `invocation`.
   ///
   /// Override for giving a more detailed description.
-  String get argumentsDescription =>
-      subcommands.isEmpty
-          ? '<subcommand> [arguments...]'
-          : (takesArguments ? '[arguments...]' : '');
+  String get argumentsDescription => subcommands.isEmpty
+      ? '<subcommand> [arguments...]'
+      : (takesArguments ? '[arguments...]' : '');
 
   /// If not `null` this overrides the default exit-code [exit_codes.SUCCESS]
   /// when exiting successfully.
@@ -243,8 +242,8 @@ and attaching the relevant parts of that log file.
         // long as we have no spaces this doesn't create a new argument.
         String protectArgument(String x) =>
             RegExp(r'^[a-zA-Z0-9-_]+$').stringMatch(x) == null
-                ? "'${x.replaceAll("'", r"'\''")}'"
-                : x;
+            ? "'${x.replaceAll("'", r"'\''")}'"
+            : x;
 
         late final Entrypoint? e;
         try {
@@ -332,10 +331,9 @@ and attaching the relevant parts of that log file.
     if (!argResults.wasParsed('color')) {
       forceColors = ForceColorOption.auto;
     } else {
-      forceColors =
-          argResults.flag('color')
-              ? ForceColorOption.always
-              : ForceColorOption.never;
+      forceColors = argResults.flag('color')
+          ? ForceColorOption.always
+          : ForceColorOption.never;
     }
   }
 

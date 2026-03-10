@@ -124,14 +124,13 @@ class PackageConfig {
       generatorVersion: generatorVersion,
       additionalProperties: Map.fromEntries(
         root.entries.where(
-          (e) =>
-              !{
-                'configVersion',
-                'packages',
-                'generated',
-                'generator',
-                'generatorVersion',
-              }.contains(e.key),
+          (e) => !{
+            'configVersion',
+            'packages',
+            'generated',
+            'generator',
+            'generatorVersion',
+          }.contains(e.key),
         ),
       ),
     );

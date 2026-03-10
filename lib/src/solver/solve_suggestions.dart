@@ -80,11 +80,10 @@ Future<String?> suggestResolutionAlternatives(
   }
 
   if (suggestions.isEmpty) return null;
-  final tryOne =
-      suggestions.length == 1
-          ? 'You can try the following suggestion to make the pubspec resolve:'
-          : 'You can try one of the following suggestions '
-              'to make the pubspec resolve:';
+  final tryOne = suggestions.length == 1
+      ? 'You can try the following suggestion to make the pubspec resolve:'
+      : 'You can try one of the following suggestions '
+            'to make the pubspec resolve:';
 
   suggestions.sort((a, b) => a.priority.compareTo(b.priority));
 
@@ -106,10 +105,9 @@ String packageAddDescription(Entrypoint entrypoint, PackageId id) {
   final resolvedDescription = id.description;
   final String descriptor;
   final d = resolvedDescription.description.serializeForPubspec(
-    containingDir:
-        Directory
-            .current
-            .path, // The add command will resolve file names relative to CWD.
+    containingDir: Directory
+        .current
+        .path, // The add command will resolve file names relative to CWD.
     // This currently should have no implications as we don't create suggestions
     // for path-packages.
     languageVersion: entrypoint.workspaceRoot.pubspec.languageVersion,
@@ -171,11 +169,11 @@ class _ResolutionContext {
     return _ResolutionSuggestion(
       runningFromFlutter
           ? '* Try using the Flutter SDK version: '
-              '${bestRelease.flutterVersion}. '
+                '${bestRelease.flutterVersion}. '
           :
-          // Here we assume that any Dart version included in a Flutter
-          // release can also be found as a released Dart SDK.
-          '* Try using the Dart SDK version: ${bestRelease.dartVersion}. See https://dart.dev/get-dart.',
+            // Here we assume that any Dart version included in a Flutter
+            // release can also be found as a released Dart SDK.
+            '* Try using the Dart SDK version: ${bestRelease.dartVersion}. See https://dart.dev/get-dart.',
     );
   }
 

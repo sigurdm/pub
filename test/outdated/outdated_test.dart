@@ -323,12 +323,11 @@ Future<void> main() async {
     ctx,
   ) async {
     ensureGit();
-    final builder =
-        await servePackages()
-          ..serve('foo', '1.0.0', deps: {'bar': '^2.0.0'})
-          ..serve('foo', '2.0.0', deps: {'bar': '^1.0.0'})
-          ..serve('bar', '1.0.0', deps: {'foo': '^1.0.0'})
-          ..serve('bar', '2.0.0', deps: {'foo': '^2.0.0'});
+    final builder = await servePackages()
+      ..serve('foo', '1.0.0', deps: {'bar': '^2.0.0'})
+      ..serve('foo', '2.0.0', deps: {'bar': '^1.0.0'})
+      ..serve('bar', '1.0.0', deps: {'foo': '^1.0.0'})
+      ..serve('bar', '2.0.0', deps: {'foo': '^2.0.0'});
 
     await d.dir(appPath, [
       d.pubspec({

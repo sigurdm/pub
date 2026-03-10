@@ -74,10 +74,8 @@ final class LeakDetectionValidator extends Validator {
     if (leaks.length > 3) {
       errors.addAll(leaks.take(2).map((leak) => leak.describe()));
 
-      final files = leaks
-        .map((leak) => leak.url)
-        .toSet()
-        .toList(growable: false)..sort();
+      final files =
+          leaks.map((leak) => leak.url).toSet().toList(growable: false)..sort();
       final s = files.length > 1 ? 's' : '';
 
       errors.add(
@@ -570,19 +568,18 @@ H0M6xpM2q+53wmsN/eYLdgtjgBd3DBmHtPilCkiFICXyaA8z9LkJ
   ),
   LeakPattern._(
     kind: 'PGP Private Key',
-    pattern:
-        [
-          _pemBegin('PGP PRIVATE KEY BLOCK'),
-          // Allow "Armor Headers" from:
-          // https://www.rfc-editor.org/rfc/rfc4880.html#section-6.2
-          '(?:\\w+: [^\\n]{1,1024}$_pemRequireLineBreak$_pemWSP)*',
-          _pemBase64Block(),
-          // Require a line break, and a 24-bit base64 encoded checksum prefixed '='
-          // https://www.rfc-editor.org/rfc/rfc4880.html#section-6
-          '$_pemRequireLineBreak$_pemWSP',
-          '=(?:(?:[a-zA-Z0-9+/]$_pemWSP){4})',
-          _pemEnd('PGP PRIVATE KEY BLOCK'),
-        ].join(),
+    pattern: [
+      _pemBegin('PGP PRIVATE KEY BLOCK'),
+      // Allow "Armor Headers" from:
+      // https://www.rfc-editor.org/rfc/rfc4880.html#section-6.2
+      '(?:\\w+: [^\\n]{1,1024}$_pemRequireLineBreak$_pemWSP)*',
+      _pemBase64Block(),
+      // Require a line break, and a 24-bit base64 encoded checksum prefixed '='
+      // https://www.rfc-editor.org/rfc/rfc4880.html#section-6
+      '$_pemRequireLineBreak$_pemWSP',
+      '=(?:(?:[a-zA-Z0-9+/]$_pemWSP){4})',
+      _pemEnd('PGP PRIVATE KEY BLOCK'),
+    ].join(),
     testsWithLeaks: [
       '''
 -----BEGIN PGP PRIVATE KEY BLOCK-----
@@ -627,52 +624,49 @@ String _pemWSP = r'(?:\\r|\\n|\\t|\s)*';
 // is in a JSON string. We just require something to indicate line break.
 String _pemRequireLineBreak = r'\s*(?:\\r|\\n|\r|\n)\s*';
 
-String _pemBegin(String label) =>
-    [
-      // Require a boundary
-      '-----BEGIN $label-----',
-      // Require \n, \r, \\r, or \\n, backslash escaping is allowed if the key
-      // is in a JSON string. We just require something to indicate line break.
-      _pemRequireLineBreak,
-      // Allow arbitrary whitespace and escaped line breaks
-      _pemWSP,
-    ].join();
+String _pemBegin(String label) => [
+  // Require a boundary
+  '-----BEGIN $label-----',
+  // Require \n, \r, \\r, or \\n, backslash escaping is allowed if the key
+  // is in a JSON string. We just require something to indicate line break.
+  _pemRequireLineBreak,
+  // Allow arbitrary whitespace and escaped line breaks
+  _pemWSP,
+].join();
 
-String _pemBase64Block() =>
-    [
-      // Require base64 character in blocks of 4, allow arbirary whitespace
-      // and escaped line breaks in between.
-      '(?:(?:[a-zA-Z0-9+/]$_pemWSP){4})+',
-      // We have 3 options for encoding the ending:
-      // (A) 1 padding character,
-      // (B) 2 padding characters,
-      // (C) No padding characters (neither A or B)
-      '(?:(',
-      [
-        // Option (A): 3 base64 characters followed by one base64 padding
-        // character, allow arbirary whitespace and escaped line breaks
-        // in between.
-        '(?:[a-zA-Z0-9+/]$_pemWSP){3}=$_pemWSP',
-        // Either (A) or (B):
-        ')|(?:',
-        // Option (B): 2 base64 characters followed by 2 base64 padding
-        // character, allow arbirary whitespace and escaped line breaks
-        // in between.
-        '(?:[a-zA-Z0-9+/]$_pemWSP){2}(?:=$_pemWSP){2}',
-      ].join(),
-      // End blocks
-      '))?',
-    ].join();
+String _pemBase64Block() => [
+  // Require base64 character in blocks of 4, allow arbirary whitespace
+  // and escaped line breaks in between.
+  '(?:(?:[a-zA-Z0-9+/]$_pemWSP){4})+',
+  // We have 3 options for encoding the ending:
+  // (A) 1 padding character,
+  // (B) 2 padding characters,
+  // (C) No padding characters (neither A or B)
+  '(?:(',
+  [
+    // Option (A): 3 base64 characters followed by one base64 padding
+    // character, allow arbirary whitespace and escaped line breaks
+    // in between.
+    '(?:[a-zA-Z0-9+/]$_pemWSP){3}=$_pemWSP',
+    // Either (A) or (B):
+    ')|(?:',
+    // Option (B): 2 base64 characters followed by 2 base64 padding
+    // character, allow arbirary whitespace and escaped line breaks
+    // in between.
+    '(?:[a-zA-Z0-9+/]$_pemWSP){2}(?:=$_pemWSP){2}',
+  ].join(),
+  // End blocks
+  '))?',
+].join();
 
-String _pemEnd(String label) =>
-    [
-      // Require \n, \r, \\r, or \\n, backslash escaping is allowed if the key
-      // is in a JSON string. We just require something to indicate line break.
-      _pemRequireLineBreak,
-      // Allow arbitrary whitespace and escaped line breaks
-      _pemWSP,
-      '-----END $label-----',
-    ].join();
+String _pemEnd(String label) => [
+  // Require \n, \r, \\r, or \\n, backslash escaping is allowed if the key
+  // is in a JSON string. We just require something to indicate line break.
+  _pemRequireLineBreak,
+  // Allow arbitrary whitespace and escaped line breaks
+  _pemWSP,
+  '-----END $label-----',
+].join();
 
 String _pemKeyFormat(String label) =>
     [_pemBegin(label), _pemBase64Block(), _pemEnd(label)].join();

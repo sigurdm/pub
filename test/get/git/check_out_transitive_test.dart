@@ -27,10 +27,9 @@ void main() {
         '1.0.0',
         deps: {
           'bar': {
-            'git':
-                p
-                    .toUri(p.absolute(d.sandbox, appPath, '../bar.git'))
-                    .toString(),
+            'git': p
+                .toUri(p.absolute(d.sandbox, appPath, '../bar.git'))
+                .toString(),
           },
         },
       ),
@@ -45,10 +44,9 @@ void main() {
         .appDir(
           dependencies: {
             'foo': {
-              'git':
-                  p
-                      .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
-                      .toString(),
+              'git': p
+                  .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
+                  .toString(),
             },
           },
         )
@@ -94,10 +92,9 @@ void main() {
         .appDir(
           dependencies: {
             'foo': {
-              'git':
-                  p
-                      .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
-                      .toString(),
+              'git': p
+                  .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
+                  .toString(),
             },
           },
         )
@@ -134,10 +131,9 @@ void main() {
           dependencies: {
             'foo': {
               'git': {
-                'url':
-                    p
-                        .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
-                        .toString(),
+                'url': p
+                    .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
+                    .toString(),
                 'path': 'pkgs/foo',
               },
             },
@@ -178,10 +174,9 @@ void main() {
           dependencies: {
             'foo': {
               'git': {
-                'url':
-                    p
-                        .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
-                        .toString(),
+                'url': p
+                    .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
+                    .toString(),
                 'path': 'foo/',
               },
             },
@@ -212,10 +207,9 @@ void main() {
         .appDir(
           dependencies: {
             'foo': {
-              'git':
-                  p
-                      .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
-                      .toString(),
+              'git': p
+                  .toUri(p.absolute(d.sandbox, appPath, '../foo.git'))
+                  .toString(),
             },
           },
         )

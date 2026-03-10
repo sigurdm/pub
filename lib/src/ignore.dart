@@ -142,8 +142,9 @@ final class Ignore {
     if (_rules.isEmpty) {
       return false;
     }
-    final pathWithoutSlash =
-        path.endsWith('/') ? path.substring(0, path.length - 1) : path;
+    final pathWithoutSlash = path.endsWith('/')
+        ? path.substring(0, path.length - 1)
+        : path;
     return listFiles(
       beneath: pathWithoutSlash,
       includeDirs: true,
@@ -156,11 +157,10 @@ final class Ignore {
         return [path.substring(startOfNext, nextSlash)];
       },
       ignoreForDir: (dir) => dir == '.' || dir.isEmpty ? this : null,
-      isDir:
-          (candidate) =>
-              candidate == '.' ||
-              candidate.isEmpty ||
-              path.length > candidate.length && path[candidate.length] == '/',
+      isDir: (candidate) =>
+          candidate == '.' ||
+          candidate.isEmpty ||
+          path.length > candidate.length && path[candidate.length] == '/',
     ).isEmpty;
   }
 
@@ -295,9 +295,9 @@ final class Ignore {
           ignore == null
               ? null
               : _IgnorePrefixPair(
-                ignore,
-                current == '/' ? current : '$current/',
-              ),
+                  ignore,
+                  current == '/' ? current : '$current/',
+                ),
         );
         // Put all entities in current on the stack to be processed.
         toVisit.add(listDir(normalizedCurrent).map((x) => '/$x').toList());
@@ -578,8 +578,9 @@ bool _matchesStack(List<_IgnorePrefixPair?> ignores, String path) {
   for (final ignorePair in ignores.reversed) {
     if (ignorePair == null) continue;
     final prefixLength = ignorePair.prefix.length;
-    final s =
-        prefixLength == 0 ? path : path.substring(ignorePair.prefix.length);
+    final s = prefixLength == 0
+        ? path
+        : path.substring(ignorePair.prefix.length);
     for (final rule in ignorePair.ignore._rules.reversed) {
       if (rule.pattern.hasMatch(s)) {
         return !rule.negative;

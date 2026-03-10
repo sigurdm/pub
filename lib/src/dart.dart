@@ -33,10 +33,9 @@ class AnalysisContextManager {
   );
 
   AnalysisContextManager._(this.packagePath)
-    : _session =
-          AnalysisContextCollection(
-            includedPaths: [packagePath],
-          ).contextFor(packagePath).currentSession;
+    : _session = AnalysisContextCollection(
+        includedPaths: [packagePath],
+      ).contextFor(packagePath).currentSession;
 
   /// Parse the file with the given [path] into AST.
   ///

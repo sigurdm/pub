@@ -23,7 +23,8 @@ environment:
       ]).create();
       await runPub(
         args: ['bump', part, '--dry-run'],
-        output: '''
+        output:
+            '''
 Would update version from $from to $to.
 Diff:
 - version: $from # comment
@@ -32,7 +33,8 @@ Diff:
       );
       await runPub(
         args: ['bump', part],
-        output: '''
+        output:
+            '''
 Updating version from $from to $to.
 Diff:
 - version: $from # comment

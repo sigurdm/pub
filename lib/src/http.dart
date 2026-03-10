@@ -335,15 +335,13 @@ final _httpPool = Pool(16);
 Future<T> retryForHttp<T>(String operation, FutureOr<T> Function() fn) async {
   return await retry(
     () async => await _httpPool.withResource(() async => await fn()),
-    retryIf:
-        (e) async =>
-            (e is PubHttpException && e.isIntermittent) ||
-            e is TimeoutException ||
-            e is http.ClientException ||
-            isHttpIOException(e),
-    onRetry:
-        (exception, attemptNumber) async =>
-            log.io('Attempt #$attemptNumber for $operation'),
+    retryIf: (e) async =>
+        (e is PubHttpException && e.isIntermittent) ||
+        e is TimeoutException ||
+        e is http.ClientException ||
+        isHttpIOException(e),
+    onRetry: (exception, attemptNumber) async =>
+        log.io('Attempt #$attemptNumber for $operation'),
     maxAttempts: math.max(
       1, // Having less than 1 attempt doesn't make sense.
       int.tryParse(platform.environment['PUB_MAX_HTTP_RETRIES'] ?? '') ?? 7,

@@ -15,11 +15,10 @@ import '../../test_pub.dart';
 
 void main() {
   test('Do not consider retracted packages', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
-          ..serve('bar', '1.0.0')
-          ..serve('bar', '1.1.0');
+    final server = await servePackages()
+      ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
+      ..serve('bar', '1.0.0')
+      ..serve('bar', '1.1.0');
     await d.appDir(dependencies: {'foo': '1.0.0'}).create();
 
     server.retractPackageVersion('bar', '1.1.0');
@@ -33,10 +32,9 @@ void main() {
   });
 
   test('Error when the only available package version is retracted', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
-          ..serve('bar', '1.0.0');
+    final server = await servePackages()
+      ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
+      ..serve('bar', '1.0.0');
     await d.appDir(dependencies: {'foo': '1.0.0'}).create();
 
     server.retractPackageVersion('bar', '1.0.0');
@@ -53,11 +51,10 @@ void main() {
   // In this case we expect a newer version to be published at some point which
   // will then cause pub upgrade to choose that one.
   test('Allow retracted version when it was already in pubspec.lock', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
-          ..serve('bar', '1.0.0')
-          ..serve('bar', '1.1.0');
+    final server = await servePackages()
+      ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
+      ..serve('bar', '1.0.0')
+      ..serve('bar', '1.1.0');
     await d.appDir(dependencies: {'foo': '1.0.0'}).create();
 
     await pubGet();
@@ -146,11 +143,10 @@ void main() {
   );
 
   test('Allow retracted version when pinned in dependency_overrides', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.0.0')
-          ..serve('foo', '2.0.0')
-          ..serve('foo', '3.0.0');
+    final server = await servePackages()
+      ..serve('foo', '1.0.0')
+      ..serve('foo', '2.0.0')
+      ..serve('foo', '3.0.0');
 
     await d.dir(appPath, [
       d.pubspec({
@@ -171,11 +167,10 @@ void main() {
   test(
     'Prefer retracted version in dependency_overrides over pubspec.lock',
     () async {
-      final server =
-          await servePackages()
-            ..serve('foo', '1.0.0')
-            ..serve('foo', '2.0.0')
-            ..serve('foo', '3.0.0');
+      final server = await servePackages()
+        ..serve('foo', '1.0.0')
+        ..serve('foo', '2.0.0')
+        ..serve('foo', '3.0.0');
 
       await d.appDir(dependencies: {'foo': 'any'}).create();
       await pubGet();

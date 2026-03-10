@@ -44,7 +44,8 @@ sdks: {}
       // Activating it again suggests deactivating the package.
       await runPub(
         args: ['global', 'activate', 'foo'],
-        error: '''
+        error:
+            '''
 Could not find `foo` in `$lockFilePath`.
 Your Pub cache might be corrupted.
 

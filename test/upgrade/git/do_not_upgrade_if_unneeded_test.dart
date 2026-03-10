@@ -23,10 +23,9 @@ void main() {
         '1.0.0',
         deps: {
           'foo_dep': {
-            'git':
-                p
-                    .toUri(p.absolute(d.sandbox, appPath, '../foo_dep.git'))
-                    .toString(),
+            'git': p
+                .toUri(p.absolute(d.sandbox, appPath, '../foo_dep.git'))
+                .toString(),
           },
         },
       ),
@@ -67,10 +66,9 @@ void main() {
         '1.0.0',
         deps: {
           'foo_dep': {
-            'git':
-                p
-                    .toUri(p.absolute(d.sandbox, appPath, '../foo_dep.git'))
-                    .toString(),
+            'git': p
+                .toUri(p.absolute(d.sandbox, appPath, '../foo_dep.git'))
+                .toString(),
           },
         },
       ),

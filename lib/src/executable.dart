@@ -335,21 +335,20 @@ Future<DartExecutableWithPackageConfig> getExecutableForCommand(
     'package_config.json',
   );
 
-  final rootPackageName =
-      maxBy<(String, String), int>(
-        packageConfig.packages.map((package) {
-          final packageRootDir = p.canonicalize(
-            package.resolvedRootDir(packageConfigDir),
-          );
-          if (p.equals(packageRootDir, rootOrCurrent) ||
-              p.isWithin(packageRootDir, rootOrCurrent)) {
-            return (package.name, packageRootDir);
-          } else {
-            return null;
-          }
-        }).nonNulls,
-        (tuple) => tuple.$2.length,
-      )?.$1;
+  final rootPackageName = maxBy<(String, String), int>(
+    packageConfig.packages.map((package) {
+      final packageRootDir = p.canonicalize(
+        package.resolvedRootDir(packageConfigDir),
+      );
+      if (p.equals(packageRootDir, rootOrCurrent) ||
+          p.isWithin(packageRootDir, rootOrCurrent)) {
+        return (package.name, packageRootDir);
+      } else {
+        return null;
+      }
+    }).nonNulls,
+    (tuple) => tuple.$2.length,
+  )?.$1;
 
   if (rootPackageName == null) {
     final packageConfigPath = p.join(

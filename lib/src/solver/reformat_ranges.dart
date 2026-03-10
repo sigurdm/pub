@@ -146,10 +146,9 @@ int _lowerBound(List<PackageId> ids, Version version) {
 IncompatibilityCause _reformatCause(
   Map<PackageRef, PackageLister> packageListers,
   IncompatibilityCause cause,
-) =>
-    cause is ConflictCause
-        ? ConflictCause(
-          reformatRanges(packageListers, cause.conflict),
-          reformatRanges(packageListers, cause.other),
-        )
-        : cause;
+) => cause is ConflictCause
+    ? ConflictCause(
+        reformatRanges(packageListers, cause.conflict),
+        reformatRanges(packageListers, cause.other),
+      )
+    : cause;

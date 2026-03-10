@@ -56,8 +56,9 @@ Got dependencies!
     expect(fileExists(fooVersionsCache), isTrue);
     final c = json.decode(readTextFile(fooVersionsCache)) as Map;
     // Make the cache artificially old.
-    c['_fetchedAt'] =
-        DateTime.now().subtract(const Duration(days: 5)).toIso8601String();
+    c['_fetchedAt'] = DateTime.now()
+        .subtract(const Duration(days: 5))
+        .toIso8601String();
     writeTextFile(fooVersionsCache, json.encode(c));
 
     server.discontinue('foo', replacementText: 'bar');
@@ -159,8 +160,9 @@ Got dependencies!
     expect(fileExists(fooVersionsCache), isTrue);
     final c = json.decode(readTextFile(fooVersionsCache)) as Map;
     // Make the cache artificially old.
-    c['_fetchedAt'] =
-        DateTime.now().subtract(const Duration(days: 5)).toIso8601String();
+    c['_fetchedAt'] = DateTime.now()
+        .subtract(const Duration(days: 5))
+        .toIso8601String();
     writeTextFile(fooVersionsCache, json.encode(c));
     builder.discontinue('foo', replacementText: 'bar');
     await pubGet(

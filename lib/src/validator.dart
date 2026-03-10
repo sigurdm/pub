@@ -96,10 +96,9 @@ abstract class Validator {
     final allowedSdks = VersionRange(
       min: firstSdkVersion,
       includeMin: true,
-      max:
-          firstSdkVersion.isPreRelease
-              ? firstSdkVersion.nextPatch
-              : firstSdkVersion.nextBreaking,
+      max: firstSdkVersion.isPreRelease
+          ? firstSdkVersion.nextPatch
+          : firstSdkVersion.nextBreaking,
     );
 
     var newSdkConstraint = package.pubspec.dartSdkConstraint.originalConstraint
@@ -221,8 +220,8 @@ abstract class Validator {
         .where(
           recursive
               ? (file) =>
-                  p.isWithin(base, p.canonicalize(file)) ||
-                  p.canonicalize(file) == base
+                    p.isWithin(base, p.canonicalize(file)) ||
+                    p.canonicalize(file) == base
               : (file) => p.canonicalize(p.dirname(file)) == base,
         )
         .toList();

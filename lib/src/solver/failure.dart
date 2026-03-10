@@ -126,8 +126,9 @@ class _Writer {
 
     // Only add line numbers if the derivation actually needs to refer to a line
     // by number.
-    final padding =
-        _lineNumbers.isEmpty ? 0 : '(${_lineNumbers.values.last}) '.length;
+    final padding = _lineNumbers.isEmpty
+        ? 0
+        : '(${_lineNumbers.values.last}) '.length;
 
     var lastWasEmpty = false;
     for (var (lineMessage, lineNumber) in _lines) {
@@ -252,10 +253,12 @@ class _Writer {
         final singleLineConflict = _isSingleLine(cause);
         final singleLineOther = _isSingleLine(otherCause);
         if (singleLineOther || singleLineConflict) {
-          final first =
-              singleLineOther ? conflictClause.conflict : conflictClause.other;
-          final second =
-              singleLineOther ? conflictClause.other : conflictClause.conflict;
+          final first = singleLineOther
+              ? conflictClause.conflict
+              : conflictClause.other;
+          final second = singleLineOther
+              ? conflictClause.other
+              : conflictClause.conflict;
           _visit(first, detailsForCause);
           _visit(second, detailsForCause);
           _write(
@@ -279,14 +282,12 @@ class _Writer {
         }
       }
     } else if (cause is ConflictCause || otherCause is ConflictCause) {
-      final derived =
-          cause is ConflictCause
-              ? conflictClause.conflict
-              : conflictClause.other;
-      final ext =
-          cause is ConflictCause
-              ? conflictClause.other
-              : conflictClause.conflict;
+      final derived = cause is ConflictCause
+          ? conflictClause.conflict
+          : conflictClause.other;
+      final ext = cause is ConflictCause
+          ? conflictClause.other
+          : conflictClause.conflict;
 
       final derivedLine = _lineNumbers[derived];
       if (derivedLine != null) {
@@ -303,14 +304,12 @@ class _Writer {
         );
       } else if (_isCollapsible(derived)) {
         final derivedCause = derived.cause as ConflictCause;
-        final collapsedDerived =
-            derivedCause.conflict.cause is ConflictCause
-                ? derivedCause.conflict
-                : derivedCause.other;
-        final collapsedExt =
-            derivedCause.conflict.cause is ConflictCause
-                ? derivedCause.other
-                : derivedCause.conflict;
+        final collapsedDerived = derivedCause.conflict.cause is ConflictCause
+            ? derivedCause.conflict
+            : derivedCause.other;
+        final collapsedExt = derivedCause.conflict.cause is ConflictCause
+            ? derivedCause.other
+            : derivedCause.conflict;
 
         detailsForCause = mergeMaps(
           detailsForCause,
@@ -397,8 +396,9 @@ class _Writer {
 
     // If [incompatibility]'s internal cause is numbered, collapsing it would
     // get too noisy.
-    final complex =
-        cause.conflict.cause is ConflictCause ? cause.conflict : cause.other;
+    final complex = cause.conflict.cause is ConflictCause
+        ? cause.conflict
+        : cause.other;
     return !_lineNumbers.containsKey(complex);
   }
 

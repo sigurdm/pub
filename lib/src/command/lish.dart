@@ -361,17 +361,17 @@ the \$PUB_HOSTED_URL environment variable.''');
       'Publishing ${package.name} ${package.version} to $host:\n$fileTree',
     );
 
-    final packageBytes =
-        await createTarGz(
-          filesAndDirs,
-          baseDir: entrypoint.workPackage.dir,
-        ).toBytes();
+    final packageBytes = await createTarGz(
+      filesAndDirs,
+      baseDir: entrypoint.workPackage.dir,
+    ).toBytes();
 
     final size = readableFileSize(packageBytes.length);
     log.message('\nTotal compressed archive size: $size.\n');
 
-    final validationResult =
-        skipValidation ? null : await _validate(packageBytes, files, host);
+    final validationResult = skipValidation
+        ? null
+        : await _validate(packageBytes, files, host);
 
     if (dryRun) {
       log.message('The server may enforce additional checks.');
@@ -492,10 +492,9 @@ the \$PUB_HOSTED_URL environment variable.''');
   @override
   Future runProtected() async {
     await _validateArgs();
-    final publication =
-        await (_fromArchive == null
-            ? _publicationFromEntrypoint()
-            : _publicationFromArchive(_fromArchive));
+    final publication = await (_fromArchive == null
+        ? _publicationFromEntrypoint()
+        : _publicationFromArchive(_fromArchive));
     if (dryRun) {
       log.message(publication.warningsCountMessage);
       if (publication.warningCount != 0 &&
@@ -543,8 +542,9 @@ class _Publication {
   Pubspec pubspec;
 
   String get warningsCountMessage {
-    final hintText =
-        hintCount == 0 ? '' : ' and $hintCount ${pluralize('hint', hintCount)}';
+    final hintText = hintCount == 0
+        ? ''
+        : ' and $hintCount ${pluralize('hint', hintCount)}';
     return '\nPackage has $warningCount '
         '${pluralize('warning', warningCount)}$hintText.';
   }

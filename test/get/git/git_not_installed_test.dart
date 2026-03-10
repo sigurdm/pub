@@ -41,7 +41,8 @@ echo "not git"
 
   test('warns if git version is too old', () async {
     await setUpFakeGitScript(
-      bash: '''
+      bash:
+          '''
 #!/bin/bash -e
 if [ "\$1" == "--version" ]
 then
@@ -51,7 +52,8 @@ else
   PATH=${Platform.environment['PATH']} git \$*
 fi
 ''',
-      batch: '''
+      batch:
+          '''
 if "%1"=="--version" (
   echo "git version 2.13.1.616"
 ) else (

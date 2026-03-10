@@ -309,10 +309,9 @@ class GitSource extends CachedSource {
       await _ensureRepoCache(description, cache);
       final path = _repoCachePath(description, cache);
 
-      final revision =
-          tagPattern != null
-              ? (await _listTaggedVersions(path, tagPattern)).last.commitId
-              : await _firstRevision(path, description.ref);
+      final revision = tagPattern != null
+          ? (await _listTaggedVersions(path, tagPattern)).last.commitId
+          : await _firstRevision(path, description.ref);
       final resolvedDescription = ResolvedGitDescription(description, revision);
 
       return Pubspec.parse(
@@ -551,43 +550,41 @@ class GitSource extends CachedSource {
 
     final result = <RepairResult>[];
 
-    final packages =
-        listDir(rootDir)
-            .where((entry) => dirExists(p.join(entry, '.git')))
-            .expand((revisionCachePath) {
-              return _readPackageList(revisionCachePath).map((relative) {
-                // If we've already failed to load another package from this
-                // repository, ignore it.
-                if (!dirExists(revisionCachePath)) return null;
+    final packages = listDir(rootDir)
+        .where((entry) => dirExists(p.join(entry, '.git')))
+        .expand((revisionCachePath) {
+          return _readPackageList(revisionCachePath).map((relative) {
+            // If we've already failed to load another package from this
+            // repository, ignore it.
+            if (!dirExists(revisionCachePath)) return null;
 
-                final packageDir = p.join(revisionCachePath, relative);
-                try {
-                  final package = Package.load(
-                    packageDir,
-                    loadPubspec: Pubspec.loadRootWithSources(cache.sources),
-                  );
-                  if (packageFilter != null &&
-                      !packageFilter(package.name, package.version)) {
-                    return null;
-                  }
-                  return package;
-                } catch (error, stackTrace) {
-                  final name = p.basename(revisionCachePath).split('-').first;
-                  if (packageFilter != null &&
-                      !packageFilter(name, Version.none)) {
-                    return null;
-                  }
-                  log.error('Failed to load package', error, stackTrace);
-                  result.add(
-                    RepairResult(name, Version.none, this, success: false),
-                  );
-                  tryDeleteEntry(revisionCachePath);
-                  return null;
-                }
-              });
-            })
-            .nonNulls
-            .toList();
+            final packageDir = p.join(revisionCachePath, relative);
+            try {
+              final package = Package.load(
+                packageDir,
+                loadPubspec: Pubspec.loadRootWithSources(cache.sources),
+              );
+              if (packageFilter != null &&
+                  !packageFilter(package.name, package.version)) {
+                return null;
+              }
+              return package;
+            } catch (error, stackTrace) {
+              final name = p.basename(revisionCachePath).split('-').first;
+              if (packageFilter != null && !packageFilter(name, Version.none)) {
+                return null;
+              }
+              log.error('Failed to load package', error, stackTrace);
+              result.add(
+                RepairResult(name, Version.none, this, success: false),
+              );
+              tryDeleteEntry(revisionCachePath);
+              return null;
+            }
+          });
+        })
+        .nonNulls
+        .toList();
 
     // Note that there may be multiple packages with the same name and version
     // (pinned to different commits). The sort order of those is unspecified.
@@ -833,13 +830,12 @@ class GitSource extends CachedSource {
   Future<String> _firstRevision(String path, String reference) async {
     final String output;
     try {
-      output =
-          (await git.run([
-            _gitDirArg(path),
-            'rev-list',
-            '--max-count=1',
-            reference,
-          ], workingDir: path)).trim();
+      output = (await git.run([
+        _gitDirArg(path),
+        'rev-list',
+        '--max-count=1',
+        reference,
+      ], workingDir: path)).trim();
     } on git.GitException catch (e) {
       throw PackageNotFoundException(
         "Could not find git ref '$reference' (${e.stderr})",
@@ -971,21 +967,19 @@ class GitSource extends CachedSource {
           final gitEntry = p.join(candidate, '.git');
           try {
             if (dirExists(gitEntry)) {
-              final path =
-                  (await git.run([
-                    'remote',
-                    'get-url',
-                    'origin',
-                  ], workingDir: candidate)).split('\n').first;
+              final path = (await git.run([
+                'remote',
+                'get-url',
+                'origin',
+              ], workingDir: candidate)).split('\n').first;
               cacheDirsToRemove.remove(p.canonicalize(path));
             } else if (fileExists(gitEntry)) {
               // Potential future - using worktrees.
-              final path =
-                  (await git.run([
-                    'worktree',
-                    'list',
-                    '--porcelain',
-                  ], workingDir: candidate)).split('\n').first.split(' ').last;
+              final path = (await git.run([
+                'worktree',
+                'list',
+                '--porcelain',
+              ], workingDir: candidate)).split('\n').first.split(' ').last;
               cacheDirsToRemove.remove(p.canonicalize(path));
             }
           } on git.GitException catch (e) {
@@ -1072,13 +1066,12 @@ class GitDescription extends Description {
     required String? containingDir,
     required LanguageVersion languageVersion,
   }) {
-    final relativeUrl =
-        containingDir != null && relative
-            ? p.url.relative(
-              url,
-              from: p.toUri(p.normalize(p.absolute(containingDir))).toString(),
-            )
-            : url;
+    final relativeUrl = containingDir != null && relative
+        ? p.url.relative(
+            url,
+            from: p.toUri(p.normalize(p.absolute(containingDir))).toString(),
+          )
+        : url;
     if (ref == 'HEAD' && path == '.' && tagPattern == null) return relativeUrl;
     return {
       'url': relativeUrl,
@@ -1145,13 +1138,12 @@ class ResolvedGitDescription extends ResolvedDescription {
 
   @override
   Object? serializeForLockfile({required String? containingDir}) {
-    final url =
-        description.relative && containingDir != null
-            ? p.url.relative(
-              description.url,
-              from: Uri.file(p.absolute(containingDir)).toString(),
-            )
-            : description.url;
+    final url = description.relative && containingDir != null
+        ? p.url.relative(
+            description.url,
+            from: Uri.file(p.absolute(containingDir)).toString(),
+          )
+        : description.url;
     return {
       'url': url,
 
@@ -1183,8 +1175,9 @@ class _ValidatedUrl {
 
 String _gitDirArg(String path) {
   path = p.absolute(path);
-  final forwardSlashPath =
-      platform.isWindows ? path.replaceAll('\\', '/') : path;
+  final forwardSlashPath = platform.isWindows
+      ? path.replaceAll('\\', '/')
+      : path;
   return '--git-dir=$forwardSlashPath';
 }
 

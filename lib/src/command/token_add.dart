@@ -19,7 +19,8 @@ class TokenAddCommand extends PubCommand {
   @override
   String get name => 'add';
   @override
-  String get description => '''
+  String get description =>
+      '''
 Add an authentication token for a package repository.
 
 The token will be used for authorizing against <hosted-url> both when

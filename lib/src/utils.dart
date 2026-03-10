@@ -412,10 +412,9 @@ String niceDuration(Duration duration) {
 
   // If we're using verbose logging, be more verbose but more accurate when
   // reporting timing information.
-  final msString =
-      log.verbosity.isLevelVisible(log.Level.fine)
-          ? _padLeft(ms.toString(), 3, '0')
-          : (ms ~/ 100).toString();
+  final msString = log.verbosity.isLevelVisible(log.Level.fine)
+      ? _padLeft(ms.toString(), 3, '0')
+      : (ms ~/ 100).toString();
 
   return "$result${hasMinutes ? _padLeft(s.toString(), 2, '0') : s}"
       '.${msString}s';
@@ -578,11 +577,10 @@ String createUuid([List<int>? bytes]) {
   bytes[6] = (bytes[6] & 0x0F) | 0x40;
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
-  final chars =
-      bytes
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .join()
-          .toUpperCase();
+  final chars = bytes
+      .map((b) => b.toRadixString(16).padLeft(2, '0'))
+      .join()
+      .toUpperCase();
 
   return ''
       '${chars.substring(0, 8)}-'

@@ -525,8 +525,10 @@ class HostedSource extends CachedSource {
       SystemCache cache,
     ) {
       if (listing == null || listing.isEmpty) return;
-      final latestVersion =
-          maxBy<_VersionInfo, Version>(listing, (e) => e.version)!;
+      final latestVersion = maxBy<_VersionInfo, Version>(
+        listing,
+        (e) => e.version,
+      )!;
       final dependencies = latestVersion.pubspec.dependencies.values;
       unawaited(() async {
         for (final packageRange in dependencies) {
@@ -758,13 +760,12 @@ class HostedSource extends CachedSource {
     SystemCache cache,
     Duration? maxAge,
   ) async {
-    final advisoriesUpdated =
-        (await status(
-          id.toRef(),
-          id.version,
-          cache,
-          maxAge: maxAge,
-        )).advisoriesUpdated;
+    final advisoriesUpdated = (await status(
+      id.toRef(),
+      id.version,
+      cache,
+      maxAge: maxAge,
+    )).advisoriesUpdated;
     if (advisoriesUpdated == null) return null;
 
     Future<List<Advisory>?> readAdvisoriesFromCache() async {
@@ -790,8 +791,11 @@ class HostedSource extends CachedSource {
           final parsedCacheAdvisoriesUpdated = DateTime.parse(
             cachedAdvisoriesUpdated,
           );
-          final advisoriesUpdated =
-              (await status(id.toRef(), id.version, cache)).advisoriesUpdated;
+          final advisoriesUpdated = (await status(
+            id.toRef(),
+            id.version,
+            cache,
+          )).advisoriesUpdated;
 
           if (
           // We could not obtain the timestamp of latest advisory update.
@@ -1034,14 +1038,11 @@ class HostedSource extends CachedSource {
       log.io('Finding versions of ${ref.name} in $dir');
       List<PackageId> offlineVersions;
       if (dirExists(dir)) {
-        offlineVersions =
-            listDir(dir)
-                .where(_looksLikePackageDir)
-                .map((entry) => _idForBasename(p.basename(entry), url))
-                .where(
-                  (id) => id.name == ref.name && id.version != Version.none,
-                )
-                .toList();
+        offlineVersions = listDir(dir)
+            .where(_looksLikePackageDir)
+            .map((entry) => _idForBasename(p.basename(entry), url))
+            .where((id) => id.name == ref.name && id.version != Version.none)
+            .toList();
       } else {
         offlineVersions = [];
       }
@@ -1660,9 +1661,9 @@ See $contentHashesDocumentationUrl.
           tempDir,
           cache.sources,
           containingDescription:
-          // Dummy description. As we never use the dependencies, they don't
-          // need to be resolved.
-          ResolvedRootDescription.fromDir('.'),
+              // Dummy description. As we never use the dependencies, they don't
+              // need to be resolved.
+              ResolvedRootDescription.fromDir('.'),
         );
         final errors = pubspec.dependencyErrors;
         if (errors.isNotEmpty) {
@@ -2007,8 +2008,9 @@ String _urlToDirectory(String hostedUrl) {
       // nice for the default and most recommended scheme. We also don't include
       // it for localhost URLs, since they're always known to be HTTP.
       final localhost = match[2] == null ? '' : 'localhost';
-      final scheme =
-          match[1] == 'https://' || localhost.isNotEmpty ? '' : match[1];
+      final scheme = match[1] == 'https://' || localhost.isNotEmpty
+          ? ''
+          : match[1];
       return '$scheme$localhost';
     },
   );
@@ -2040,8 +2042,9 @@ String _directoryToUrl(String directory) {
   }
 
   // Otherwise, default to http for localhost and https for everything else.
-  final scheme =
-      isLoopback(directory.replaceAll(RegExp(':.*'), '')) ? 'http' : 'https';
+  final scheme = isLoopback(directory.replaceAll(RegExp(':.*'), ''))
+      ? 'http'
+      : 'https';
   return Uri.parse('$scheme://$directory').toString();
 }
 

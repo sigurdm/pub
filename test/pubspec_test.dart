@@ -380,7 +380,8 @@ workspace: ['a', 'b', 'c']
         expectedContains:
             '`workspace` and `resolution` '
             'requires at least language version 3.5',
-        hintContains: '''
+        hintContains:
+            '''
 Consider updating the SDK constraint to:
 
 environment:
@@ -414,7 +415,8 @@ resolution: workspace
         expectedContains:
             '`workspace` and `resolution` '
             'requires at least language version 3.5',
-        hintContains: '''
+        hintContains:
+            '''
 Consider updating the SDK constraint to:
 
 environment:

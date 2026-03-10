@@ -12,19 +12,14 @@ import 'package:pub/src/path.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 Future<void> main(List<String> args) async {
-  final argParser =
-      ArgParser()
-        ..addFlag(
-          'create',
-          help: 'Create the missing tags, otherwise only list them',
-          negatable: false,
-        )
-        ..addFlag(
-          'push',
-          help: 'Push missing sdk tags to remote',
-          negatable: false,
-        )
-        ..addOption('sdk-dir');
+  final argParser = ArgParser()
+    ..addFlag(
+      'create',
+      help: 'Create the missing tags, otherwise only list them',
+      negatable: false,
+    )
+    ..addFlag('push', help: 'Push missing sdk tags to remote', negatable: false)
+    ..addOption('sdk-dir');
   final ArgResults argResults;
   try {
     argResults = argParser.parse(args);

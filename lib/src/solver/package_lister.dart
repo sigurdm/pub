@@ -84,16 +84,18 @@ class PackageLister {
     final cachedVersions =
         _ref.isRoot
               ? [
-                PackageId(
-                  _ref.name,
-                  _rootPackage!.pubspec.version,
-                  ResolvedRootDescription(_ref.description as RootDescription),
-                ),
-              ]
+                  PackageId(
+                    _ref.name,
+                    _rootPackage!.pubspec.version,
+                    ResolvedRootDescription(
+                      _ref.description as RootDescription,
+                    ),
+                  ),
+                ]
               : (await _systemCache.getVersions(
-                _ref,
-                allowedRetractedVersion: _allowedRetractedVersion,
-              ))
+                  _ref,
+                  allowedRetractedVersion: _allowedRetractedVersion,
+                ))
           ..sort((id1, id2) => id1.version.compareTo(id2.version));
     _cachedVersions = cachedVersions;
     return cachedVersions;
@@ -277,8 +279,8 @@ class PackageLister {
     final index = lowerBound(
       versions,
       id,
-      compare:
-          (PackageId id1, PackageId id2) => id1.version.compareTo(id2.version),
+      compare: (PackageId id1, PackageId id2) =>
+          id1.version.compareTo(id2.version),
     );
     assert(index < versions.length);
     assert(versions[index].version == id.version);
@@ -351,10 +353,9 @@ class PackageLister {
     final incompatibleVersions = VersionRange(
       min: boundsFirstIndex == 0 ? null : versions[boundsFirstIndex].version,
       includeMin: true,
-      max:
-          boundsLastIndex == versions.length - 1
-              ? null
-              : versions[boundsLastIndex + 1].version,
+      max: boundsLastIndex == versions.length - 1
+          ? null
+          : versions[boundsLastIndex + 1].version,
       alwaysIncludeMaxPreRelease: true,
     );
     _knownInvalidVersions = incompatibleVersions.union(_knownInvalidVersions);

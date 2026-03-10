@@ -134,20 +134,18 @@ Consider using the Dart 2.19 sdk to migrate to null safety.''');
     }
 
     /// The workspace root with dependency overrides removed if requested.
-    final baseWorkspace =
-        includeDependencyOverrides
-            ? entrypoint.workspaceRoot
-            : entrypoint.workspaceRoot.transformWorkspace(
-              (package) => stripDependencyOverrides(package.pubspec),
-            );
+    final baseWorkspace = includeDependencyOverrides
+        ? entrypoint.workspaceRoot
+        : entrypoint.workspaceRoot.transformWorkspace(
+            (package) => stripDependencyOverrides(package.pubspec),
+          );
 
     /// [baseWorkspace] with dev-dependencies removed if requested.
-    final upgradableWorkspace =
-        includeDevDependencies
-            ? baseWorkspace
-            : baseWorkspace.transformWorkspace(
-              (package) => stripDevDependencies(package.pubspec),
-            );
+    final upgradableWorkspace = includeDevDependencies
+        ? baseWorkspace
+        : baseWorkspace.transformWorkspace(
+            (package) => stripDevDependencies(package.pubspec),
+          );
 
     /// [upgradableWorkspace] with upper bounds removed.
     final resolvableWorkspace = upgradableWorkspace.transformWorkspace(
@@ -278,11 +276,13 @@ Consider using the Dart 2.19 sdk to migrate to null safety.''');
           ) ??
           [];
 
-      final discontinued =
-          currentStatus == null ? false : currentStatus.isDiscontinued;
+      final discontinued = currentStatus == null
+          ? false
+          : currentStatus.isDiscontinued;
       final discontinuedReplacedBy = currentStatus?.discontinuedReplacedBy;
-      final isCurrentRetracted =
-          currentStatus == null ? false : currentStatus.isRetracted;
+      final isCurrentRetracted = currentStatus == null
+          ? false
+          : currentStatus.isRetracted;
 
       final currentVersionDetails = await _describeVersion(
         current,
@@ -310,15 +310,13 @@ Consider using the Dart 2.19 sdk to migrate to null safety.''');
       if (currentVersionDetails != null) {
         // Filter out advisories added to `ignored_advisores` in the root
         // pubspec.
-        packageAdvisories =
-            packageAdvisories
-                .where(
-                  (adv) =>
-                      entrypoint.workspaceRoot.pubspec.ignoredAdvisories
-                          .intersection({...adv.aliases, adv.id})
-                          .isEmpty,
-                )
-                .toList();
+        packageAdvisories = packageAdvisories
+            .where(
+              (adv) => entrypoint.workspaceRoot.pubspec.ignoredAdvisories
+                  .intersection({...adv.aliases, adv.id})
+                  .isEmpty,
+            )
+            .toList();
         for (final advisory in packageAdvisories) {
           if (advisory.affectedVersions.contains(
             currentVersionDetails._pubspec.version.canonicalizedVersion,
@@ -633,33 +631,31 @@ Future<void> _outputHuman(
     log.message(line);
   }
 
-  final upgradable =
-      rows.where((row) {
-        final current = row.current;
-        final upgradable = row.upgradable;
-        return current != null &&
-            upgradable != null &&
-            current < upgradable &&
-            // Include transitive only, if we show them
-            (showTransitiveDependencies ||
-                hasKind(_DependencyKind.direct)(row) ||
-                hasKind(_DependencyKind.dev)(row));
-      }).length;
+  final upgradable = rows.where((row) {
+    final current = row.current;
+    final upgradable = row.upgradable;
+    return current != null &&
+        upgradable != null &&
+        current < upgradable &&
+        // Include transitive only, if we show them
+        (showTransitiveDependencies ||
+            hasKind(_DependencyKind.direct)(row) ||
+            hasKind(_DependencyKind.dev)(row));
+  }).length;
 
-  final notAtResolvable =
-      rows.where((row) {
-        final current = row.current;
-        final upgradable = row.upgradable;
-        final resolvable = row.resolvable;
-        return (current != null || !lockFileExists) &&
-            resolvable != null &&
-            upgradable != null &&
-            upgradable < resolvable &&
-            // Include transitive only, if we show them
-            (showTransitiveDependencies ||
-                hasKind(_DependencyKind.direct)(row) ||
-                hasKind(_DependencyKind.dev)(row));
-      }).length;
+  final notAtResolvable = rows.where((row) {
+    final current = row.current;
+    final upgradable = row.upgradable;
+    final resolvable = row.resolvable;
+    return (current != null || !lockFileExists) &&
+        resolvable != null &&
+        upgradable != null &&
+        upgradable < resolvable &&
+        // Include transitive only, if we show them
+        (showTransitiveDependencies ||
+            hasKind(_DependencyKind.direct)(row) ||
+            hasKind(_DependencyKind.dev)(row));
+  }).length;
 
   if (!hasUpgradableResolution || !hasResolvableResolution) {
     log.message(mode.noResolutionText);
@@ -719,19 +715,16 @@ Future<void> _outputHuman(
   List<Advisory> advisoriesWithAffectedVersions(_PackageDetails package) {
     return package.advisories
         .where(
-          (advisory) =>
-              advisory.affectedVersions
-                  .intersection(
-                    [
-                          package.current,
-                          package.upgradable,
-                          package.resolvable,
-                          package.latest,
-                        ]
-                        .map((e) => e?._pubspec.version.canonicalizedVersion)
-                        .toSet(),
-                  )
-                  .isNotEmpty,
+          (advisory) => advisory.affectedVersions
+              .intersection(
+                [
+                  package.current,
+                  package.upgradable,
+                  package.resolvable,
+                  package.latest,
+                ].map((e) => e?._pubspec.version.canonicalizedVersion).toSet(),
+              )
+              .isNotEmpty,
         )
         .toList();
   }
@@ -750,10 +743,9 @@ Future<void> _outputHuman(
     for (var package in rows.where(displayExtraInfo)) {
       log.message(log.bold(package.name));
       if (package.isDiscontinued) {
-        final replacedByText =
-            package.discontinuedReplacedBy != null
-                ? ', replaced by ${package.discontinuedReplacedBy}.'
-                : '.';
+        final replacedByText = package.discontinuedReplacedBy != null
+            ? ', replaced by ${package.discontinuedReplacedBy}.'
+            : '.';
         log.message(
           '    Package ${package.name} has been discontinued$replacedByText '
           'See https://dart.dev/go/package-discontinue',
@@ -767,10 +759,9 @@ Future<void> _outputHuman(
       }
       final displayedAdvisories = advisoriesToDisplay[package.name]!;
       if (displayedAdvisories.isNotEmpty) {
-        final advisoriesText =
-            displayedAdvisories.length > 1
-                ? 'security advisories'
-                : 'a security advisory';
+        final advisoriesText = displayedAdvisories.length > 1
+            ? 'security advisories'
+            : 'a security advisory';
         log.message(
           '    Package ${package.name} is affected by $advisoriesText. '
           'See https://dart.dev//go/pub-security-advisories',
@@ -831,7 +822,8 @@ abstract class _Mode {
 
 class _OutdatedMode implements _Mode {
   @override
-  String explanation(String directoryDescription) => '''
+  String explanation(String directoryDescription) =>
+      '''
 Showing outdated packages$directoryDescription.
 [${log.red('*')}] indicates versions that are not the latest available.
 ''';
@@ -885,14 +877,13 @@ Showing outdated packages$directoryDescription.
             }
           }
           final advisories = packageDetails.advisories;
-          final hasAdvisory =
-              advisories
-                  .where(
-                    (advisory) => advisory.affectedVersions.contains(
-                      versionDetails._pubspec.version.canonicalizedVersion,
-                    ),
-                  )
-                  .isNotEmpty;
+          final hasAdvisory = advisories
+              .where(
+                (advisory) => advisory.affectedVersions.contains(
+                  versionDetails._pubspec.version.canonicalizedVersion,
+                ),
+              )
+              .isNotEmpty;
           if (hasAdvisory) {
             suffix = '${suffix ?? ''} (advisory)';
           }

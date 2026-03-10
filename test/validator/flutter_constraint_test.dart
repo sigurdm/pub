@@ -34,10 +34,7 @@ Future<void> setup({String? flutterConstraint}) async {
           'to fit the requirement of 60 characters',
       'homepage': 'https://example.com/',
       'version': '1.0.0',
-      'environment': {
-        'sdk': '^3.0.0',
-        if (flutterConstraint != null) 'flutter': flutterConstraint,
-      },
+      'environment': {'sdk': '^3.0.0', 'flutter': ?flutterConstraint},
     }),
   ]).create();
   await pubGet(environment: {'FLUTTER_ROOT': fakeFlutterRoot.io.path});

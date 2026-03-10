@@ -181,10 +181,9 @@ class LockFile {
             'description',
           );
 
-          final dynamic description =
-              descriptionNode is YamlScalar
-                  ? descriptionNode.value
-                  : descriptionNode;
+          final dynamic description = descriptionNode is YamlScalar
+              ? descriptionNode.value
+              : descriptionNode;
 
           // Let the source parse the description.
           final source = sources(sourceName);

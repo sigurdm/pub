@@ -917,7 +917,8 @@ foo:foomain''',
     ]).create();
     final s = p.separator;
     await pubGet(
-      error: '''
+      error:
+          '''
 Packages can only be included in the workspace once.
 
 `.${s}pkgs${s}a${s}pubspec.yaml` is included in the workspace, both from:
@@ -1405,7 +1406,8 @@ Workspace members must have unique names.
       ]).create();
       await pubGet(
         environment: {'_PUB_TEST_SDK_VERSION': '3.5.0'},
-        error: '''
+        error:
+            '''
 The package `foo` is overridden in both:
 package `myapp` at `.` and 'a' at `.${s}a`.
 
@@ -1630,7 +1632,8 @@ Consider removing one of the overrides.''',
     await runPub(
       args: ['workspace', 'list'],
       environment: {'_PUB_TEST_SDK_VERSION': '3.5.0'},
-      output: '''
+      output:
+          '''
 Package  Path
 myapp    .$s
 a        pkgs${s}a$s
@@ -1641,7 +1644,8 @@ b        pkgs${s}a${s}b$s
       args: ['workspace', 'list'],
       environment: {'_PUB_TEST_SDK_VERSION': '3.5.0'},
       workingDirectory: p.join(sandbox, appPath, 'pkgs'),
-      output: '''
+      output:
+          '''
 Package  Path
 myapp    ..$s
 a        a$s
@@ -1663,7 +1667,8 @@ b        a${s}b$s
     await runPub(
       args: ['workspace', 'list', '--json'],
       environment: {'_PUB_TEST_SDK_VERSION': '3.5.0'},
-      output: '''
+      output:
+          '''
 {
   "packages": [
     {

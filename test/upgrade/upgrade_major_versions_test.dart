@@ -102,11 +102,10 @@ void main() {
     });
 
     test('upgrades only the selected package', () async {
-      final server =
-          await servePackages()
-            ..serve('foo', '1.0.0')
-            ..serve('foo', '2.0.0')
-            ..serve('bar', '0.1.0');
+      final server = await servePackages()
+        ..serve('foo', '1.0.0')
+        ..serve('foo', '2.0.0')
+        ..serve('bar', '0.1.0');
 
       await d.appDir(dependencies: {'foo': '^1.0.0', 'bar': '^0.1.0'}).create();
 

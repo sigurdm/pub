@@ -163,12 +163,11 @@ Future<void> main() async {
   });
 
   testWithGolden('Removing transitive', (context) async {
-    final server =
-        (await servePackages())
-          ..serve('foo', '1.2.3', deps: {'transitive': '^1.0.0'})
-          ..serve('foo', '2.2.3')
-          ..serve('transitive', '1.0.0')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve('foo', '1.2.3', deps: {'transitive': '^1.0.0'})
+      ..serve('foo', '2.2.3')
+      ..serve('transitive', '1.0.0')
+      ..serveContentHashes = true;
 
     await d.dir(appPath, [
       d.pubspec({
@@ -217,12 +216,11 @@ Future<void> main() async {
   });
 
   testWithGolden('No pubspec.lock', (context) async {
-    final server =
-        (await servePackages())
-          ..serve('foo', '1.2.3', deps: {'transitive': '^1.0.0'})
-          ..serve('foo', '2.2.3')
-          ..serve('transitive', '1.0.0')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve('foo', '1.2.3', deps: {'transitive': '^1.0.0'})
+      ..serve('foo', '2.2.3')
+      ..serve('transitive', '1.0.0')
+      ..serveContentHashes = true;
 
     await d.git('bar.git', [d.libPubspec('bar', '1.0.0')]).create();
 
@@ -246,14 +244,13 @@ Future<void> main() async {
   });
 
   testWithGolden('Compatible', (context) async {
-    final server =
-        (await servePackages())
-          ..serve('foo', '1.2.3')
-          ..serve('foo', '2.2.3')
-          ..serve('bar', '1.2.3')
-          ..serve('bar', '2.2.3')
-          ..serve('boo', '1.2.3')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve('foo', '1.2.3')
+      ..serve('foo', '2.2.3')
+      ..serve('bar', '1.2.3')
+      ..serve('bar', '2.2.3')
+      ..serve('boo', '1.2.3')
+      ..serveContentHashes = true;
 
     await d.dir(appPath, [
       d.pubspec({
@@ -277,14 +274,13 @@ Future<void> main() async {
   });
 
   testWithGolden('Preserves no content-hashes', (context) async {
-    final server =
-        (await servePackages())
-          ..serve('foo', '1.2.3')
-          ..serve('foo', '2.2.3')
-          ..serve('bar', '1.2.3')
-          ..serve('bar', '2.2.3')
-          ..serve('boo', '1.2.3')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve('foo', '1.2.3')
+      ..serve('foo', '2.2.3')
+      ..serve('bar', '1.2.3')
+      ..serve('bar', '2.2.3')
+      ..serve('boo', '1.2.3')
+      ..serveContentHashes = true;
 
     await d.dir(appPath, [
       d.pubspec({
@@ -309,11 +305,10 @@ Future<void> main() async {
   });
 
   testWithGolden('Preserves pub.dartlang.org as hosted url', (context) async {
-    final server =
-        (await servePackages())
-          ..serve(r'foo', '1.2.3')
-          ..serve(r'bar', '1.2.3')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve(r'foo', '1.2.3')
+      ..serve(r'bar', '1.2.3')
+      ..serveContentHashes = true;
 
     await d.dir(appPath, [
       d.pubspec({
@@ -341,12 +336,11 @@ Future<void> main() async {
   });
 
   testWithGolden('Adding transitive', (context) async {
-    final server =
-        (await servePackages())
-          ..serve('foo', '1.2.3')
-          ..serve('foo', '2.2.3', deps: {'transitive': '^1.0.0'})
-          ..serve('transitive', '1.0.0')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve('foo', '1.2.3')
+      ..serve('foo', '2.2.3', deps: {'transitive': '^1.0.0'})
+      ..serve('transitive', '1.0.0')
+      ..serveContentHashes = true;
 
     await d.dir(appPath, [
       d.pubspec({
@@ -371,12 +365,11 @@ Future<void> main() async {
   });
 
   testWithGolden('multibreaking', (context) async {
-    final server =
-        (await servePackages())
-          ..serve('foo', '1.0.0')
-          ..serve('bar', '1.0.0')
-          ..serve('baz', '1.0.0')
-          ..serveContentHashes = true;
+    final server = (await servePackages())
+      ..serve('foo', '1.0.0')
+      ..serve('bar', '1.0.0')
+      ..serve('baz', '1.0.0')
+      ..serveContentHashes = true;
 
     await d.dir(appPath, [
       d.pubspec({

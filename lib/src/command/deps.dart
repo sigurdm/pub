@@ -121,12 +121,11 @@ class DepsCommand extends PubCommand {
         final dependencyType = entrypoint.workspaceRoot.pubspec.dependencyType(
           current,
         );
-        final kind =
-            isRoot
-                ? 'root'
-                : (dependencyType == DependencyType.direct
-                    ? 'direct'
-                    : (dependencyType == DependencyType.dev
+        final kind = isRoot
+            ? 'root'
+            : (dependencyType == DependencyType.direct
+                  ? 'direct'
+                  : (dependencyType == DependencyType.dev
                         ? 'dev'
                         : 'transitive'));
         final source =
@@ -159,10 +158,9 @@ class DepsCommand extends PubCommand {
           ),
         ])
           ...package!.executableNames.map(
-            (name) =>
-                package == entrypoint.workspaceRoot
-                    ? ':$name'
-                    : (package.name == name ? name : '${package.name}:$name'),
+            (name) => package == entrypoint.workspaceRoot
+                ? ':$name'
+                : (package.name == name ? name : '${package.name}:$name'),
           ),
       ];
 
@@ -346,8 +344,11 @@ class DepsCommand extends PubCommand {
     final workspacePackageNames = [
       ...entrypoint.workspaceRoot.transitiveWorkspace.map((p) => p.name),
     ];
-    final immediateDependencies =
-        entrypoint.workspaceRoot.immediateDependencies.keys.toSet();
+    final immediateDependencies = entrypoint
+        .workspaceRoot
+        .immediateDependencies
+        .keys
+        .toSet();
     if (!_includeDev) {
       immediateDependencies.removeAll(
         entrypoint.workspaceRoot.devDependencies.keys,

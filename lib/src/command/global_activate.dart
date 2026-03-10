@@ -159,11 +159,10 @@ class GlobalActivateCommand extends PubCommand {
         validateNoExtraArgs();
 
         if (!packageNameRegExp.hasMatch(package)) {
-          final suggestion =
-              dirExists(package)
-                  ? '\n\nDid you mean `$topLevelProgram pub global activate '
-                      '--source path ${escapeShellArgument(package)}`?'
-                  : '';
+          final suggestion = dirExists(package)
+              ? '\n\nDid you mean `$topLevelProgram pub global activate '
+                    '--source path ${escapeShellArgument(package)}`?'
+              : '';
 
           usageException('Not a valid package name: "$package"$suggestion');
         }

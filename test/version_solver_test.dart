@@ -1981,9 +1981,9 @@ Future expectResolves({
         output ??
         (error == null
             ? anyOf(
-              contains('Got dependencies!'),
-              matches(RegExp(r'Changed \d+ dependenc(ies|y)!')),
-            )
+                contains('Got dependencies!'),
+                matches(RegExp(r'Changed \d+ dependenc(ies|y)!')),
+              )
             : null),
     error: error,
     silent: contains('Tried ${tries ?? 1} solutions'),

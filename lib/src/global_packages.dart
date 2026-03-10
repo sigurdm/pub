@@ -113,11 +113,7 @@ class GlobalPackages {
     try {
       packageRef = cache.git.parseRef(
         name,
-        {
-          'url': repo,
-          if (path != null) 'path': path,
-          if (ref != null) 'ref': ref,
-        },
+        {'url': repo, 'path': ?path, 'ref': ?ref},
         containingDescription: ResolvedRootDescription.fromDir(p.current),
         languageVersion: LanguageVersion.fromVersion(sdk.version),
       );
@@ -176,11 +172,10 @@ class GlobalPackages {
   }
 
   void _testForHooks(Package package, String activatedPackageName) {
-    final prelude =
-        (package.name == activatedPackageName)
-            ? 'Package $activatedPackageName uses hooks.'
-            : 'The dependency of $activatedPackageName, '
-                '${package.name} uses hooks.';
+    final prelude = (package.name == activatedPackageName)
+        ? 'Package $activatedPackageName uses hooks.'
+        : 'The dependency of $activatedPackageName, '
+              '${package.name} uses hooks.';
     if (fileExists(p.join(package.dir, 'hooks', 'build.dart'))) {
       fail('''
 $prelude
@@ -212,8 +207,8 @@ Follow progress in https://github.com/dart-lang/sdk/issues/60889.
     await entrypoint.acquireDependencies(SolveType.get);
     final activatedPackage = entrypoint.workPackage;
     final name = activatedPackage.name;
-    for (final package in (await entrypoint.packageGraph)
-        .transitiveDependencies(
+    for (final package
+        in (await entrypoint.packageGraph).transitiveDependencies(
           name,
           followDevDependenciesFromPackage: false,
         )) {
@@ -640,8 +635,10 @@ Try reactivating the package.
     final name = p.basenameWithoutExtension(path);
     if (!fileExists(path)) path = p.join(path, 'pubspec.lock');
 
-    final id =
-        LockFile.load(p.join(_directory, path), cache.sources).packages[name];
+    final id = LockFile.load(
+      p.join(_directory, path),
+      cache.sources,
+    ).packages[name];
 
     if (id == null) {
       throw FormatException(
@@ -792,12 +789,9 @@ Try reactivating the package.
           binStubScript,
           overwrite: true,
           isRefreshingBinstub: true,
-          snapshot:
-              entrypoint.isCachedGlobal
-                  ? executable.pathOfGlobalSnapshot(
-                    entrypoint.workspaceRoot.dir,
-                  )
-                  : null,
+          snapshot: entrypoint.isCachedGlobal
+              ? executable.pathOfGlobalSnapshot(entrypoint.workspaceRoot.dir)
+              : null,
         );
       }
     }
@@ -853,12 +847,11 @@ Try reactivating the package.
         script,
         overwrite: overwriteBinStubs,
         isRefreshingBinstub: false,
-        snapshot:
-            entrypoint.isCachedGlobal
-                ? entrypoint.pathOfSnapshot(
-                  exec.Executable.adaptProgramName(package.name, script),
-                )
-                : null,
+        snapshot: entrypoint.isCachedGlobal
+            ? entrypoint.pathOfSnapshot(
+                exec.Executable.adaptProgramName(package.name, script),
+              )
+            : null,
       );
       if (previousPackage != null) {
         collided[executable] = previousPackage;
@@ -900,10 +893,9 @@ Try reactivating the package.
 
     // Show errors for any unknown executables.
     if (executables != null) {
-      final unknown =
-          executables
-              .where((exe) => !package.pubspec.executables.keys.contains(exe))
-              .sorted();
+      final unknown = executables
+          .where((exe) => !package.pubspec.executables.keys.contains(exe))
+          .sorted();
       if (unknown.isNotEmpty) {
         dataError("Unknown ${namedSequence('executable', unknown)}.");
       }
@@ -964,14 +956,16 @@ Try reactivating the package.
     }
     // When running tests we want the binstub to invoke the current pub, not the
     // one from the sdk.
-    final pubInvocation =
-        runningFromTest ? platform.script.toFilePath() : 'pub';
+    final pubInvocation = runningFromTest
+        ? platform.script.toFilePath()
+        : 'pub';
 
     final runPubGlobal = '${package.name}:$script';
 
     final String binstub;
     if (platform.isWindows) {
-      final header = '''
+      final header =
+          '''
 @echo off
 rem This file was created by pub v${sdk.version}.
 rem Package: ${package.name}
@@ -989,7 +983,8 @@ rem Script: $script
         // containing the snapshot.
         // 260 is the maximal short path length on Windows.
         final padding = ' ' * (260 - snapshot.length);
-        binstub = '''
+        binstub =
+            '''
 ${header}if exist "$snapshot" $padding(
   call dart "$snapshot" $padding%*
   rem The VM exits with code 253 if the snapshot version is out-of-date.
@@ -1007,12 +1002,14 @@ exit /b %errorlevel%
 :eof
 ''';
       } else {
-        binstub = '''
+        binstub =
+            '''
 ${header}call dart $pubInvocation global run $runPubGlobal %*
 ''';
       }
     } else {
-      final header = '''
+      final header =
+          '''
 #!/usr/bin/env sh
 # This file was created by pub v${sdk.version}.
 # Package: ${package.name}
@@ -1022,7 +1019,8 @@ ${header}call dart $pubInvocation global run $runPubGlobal %*
 ''';
       if (snapshot != null) {
         snapshot = p.absolute(snapshot);
-        binstub = '''
+        binstub =
+            '''
 ${header}if [ -f $snapshot ]; then
   dart "$snapshot" "\$@"
   # The VM exits with code 253 if the snapshot version is out-of-date.
@@ -1037,7 +1035,8 @@ else
 fi
 ''';
       } else {
-        binstub = '''
+        binstub =
+            '''
 ${header}dart $pubInvocation global run $runPubGlobal "\$@"
 ''';
       }
@@ -1129,11 +1128,10 @@ ${header}dart $pubInvocation global run $runPubGlobal "\$@"
           p.relative(binDir, from: platform.environment['HOME']),
         );
       }
-      final shellConfigFiles =
-          platform.isMacOS
-              // zsh is default on mac - mention that first.
-              ? '(.zshrc, .bashrc, .bash_profile, etc.)'
-              : '(.bashrc, .bash_profile, .zshrc etc.)';
+      final shellConfigFiles = platform.isMacOS
+          // zsh is default on mac - mention that first.
+          ? '(.zshrc, .bashrc, .bash_profile, etc.)'
+          : '(.bashrc, .bash_profile, .zshrc etc.)';
       log.warning(
         "${log.yellow('Warning:')} Pub installs executables into "
         '${log.bold(binDir)}, which is not on your path.\n'

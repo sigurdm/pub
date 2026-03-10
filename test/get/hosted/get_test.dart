@@ -40,24 +40,23 @@ void main() {
     late PackageServer server;
 
     setUp(() async {
-      server =
-          await servePackages()
-            ..serveChecksums = false
-            ..serve('foo', '1.2.3')
-            ..serve(
-              'bar',
-              '1.2.3',
-              headers: {
-                'x-goog-hash': [''],
-              },
-            )
-            ..serve(
-              'baz',
-              '1.2.3',
-              headers: {
-                'x-goog-hash': ['md5=loremipsum'],
-              },
-            );
+      server = await servePackages()
+        ..serveChecksums = false
+        ..serve('foo', '1.2.3')
+        ..serve(
+          'bar',
+          '1.2.3',
+          headers: {
+            'x-goog-hash': [''],
+          },
+        )
+        ..serve(
+          'baz',
+          '1.2.3',
+          headers: {
+            'x-goog-hash': ['md5=loremipsum'],
+          },
+        );
     });
 
     test('because of omitted checksum header', () async {
@@ -179,29 +178,28 @@ void main() {
     late PackageServer server;
 
     setUp(() async {
-      server =
-          await servePackages()
-            ..serve(
-              'foo',
-              '1.2.3',
-              headers: {
-                'x-goog-hash': ['crc32c=,md5='],
-              },
-            )
-            ..serve(
-              'bar',
-              '1.2.3',
-              headers: {
-                'x-goog-hash': ['crc32c=loremipsum,md5=loremipsum'],
-              },
-            )
-            ..serve(
-              'baz',
-              '1.2.3',
-              headers: {
-                'x-goog-hash': ['crc32c=MTIzNDU=,md5=NTQzMjE='],
-              },
-            );
+      server = await servePackages()
+        ..serve(
+          'foo',
+          '1.2.3',
+          headers: {
+            'x-goog-hash': ['crc32c=,md5='],
+          },
+        )
+        ..serve(
+          'bar',
+          '1.2.3',
+          headers: {
+            'x-goog-hash': ['crc32c=loremipsum,md5=loremipsum'],
+          },
+        )
+        ..serve(
+          'baz',
+          '1.2.3',
+          headers: {
+            'x-goog-hash': ['crc32c=MTIzNDU=,md5=NTQzMjE='],
+          },
+        );
     });
 
     test('when the CRC32C checksum is empty', () async {

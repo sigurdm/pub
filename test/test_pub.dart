@@ -464,7 +464,7 @@ Map<String, String> getPubTestEnvironment([String? tokenEndpoint]) => {
 
   // Ensure a known SDK version is set for the tests that rely on that.
   '_PUB_TEST_SDK_VERSION': testVersion,
-  if (tokenEndpoint != null) '_PUB_TEST_TOKEN_ENDPOINT': tokenEndpoint,
+  '_PUB_TEST_TOKEN_ENDPOINT': ?tokenEndpoint,
   if (_globalServer?.port != null)
     'PUB_HOSTED_URL': 'http://localhost:${_globalServer?.port}',
   'GIT_CONFIG_COUNT': '1',
@@ -473,16 +473,15 @@ Map<String, String> getPubTestEnvironment([String? tokenEndpoint]) => {
 };
 
 /// The path to the root of pub's sources in the pub repo.
-final String _pubRoot =
-    (() {
-      if (!fileExists(p.join('bin', 'pub.dart'))) {
-        throw StateError(
-          "Current working directory (${p.current} is not pub's root. "
-          "Run tests from pub's root.",
-        );
-      }
-      return p.current;
-    })();
+final String _pubRoot = (() {
+  if (!fileExists(p.join('bin', 'pub.dart'))) {
+    throw StateError(
+      "Current working directory (${p.current} is not pub's root. "
+      "Run tests from pub's root.",
+    );
+  }
+  return p.current;
+})();
 
 /// Starts a Pub process and returns a [PubProcess] that supports interaction
 /// with that process.
@@ -530,10 +529,7 @@ Future<PubProcess> startPub({
       'PATH': Platform.environment['PATH'] ?? '',
     },
     // These seem to be needed for networking to work.
-    if (Platform.isWindows) ...{
-      if (systemRoot != null) 'SYSTEMROOT': systemRoot,
-      if (tmp != null) 'TMP': tmp,
-    },
+    if (Platform.isWindows) ...{'SYSTEMROOT': ?systemRoot, 'TMP': ?tmp},
     ...getPubTestEnvironment(tokenEndpoint),
   };
   for (final e in (environment ?? {}).entries) {
@@ -592,10 +588,9 @@ class PubProcess extends TestProcess {
     );
 
     if (description == null) {
-      final humanExecutable =
-          p.isWithin(p.current, executable)
-              ? p.relative(executable)
-              : executable;
+      final humanExecutable = p.isWithin(p.current, executable)
+          ? p.relative(executable)
+          : executable;
       description = '$humanExecutable ${arguments.join(' ')}';
     }
 
@@ -616,17 +611,18 @@ class PubProcess extends TestProcess {
   });
 
   final _logLineRegExp = RegExp(r'^([A-Z ]{4})[:|] (.*)$');
-  final Map<String, log.Level> _logLevels = [
-    log.Level.error,
-    log.Level.warning,
-    log.Level.message,
-    log.Level.io,
-    log.Level.solver,
-    log.Level.fine,
-  ].fold({}, (levels, level) {
-    levels[level.name] = level;
-    return levels;
-  });
+  final Map<String, log.Level> _logLevels =
+      [
+        log.Level.error,
+        log.Level.warning,
+        log.Level.message,
+        log.Level.io,
+        log.Level.solver,
+        log.Level.fine,
+      ].fold({}, (levels, level) {
+        levels[level.name] = level;
+        return levels;
+      });
 
   Stream<(log.Level, String message)> _outputToLog(
     Stream<String> stream,

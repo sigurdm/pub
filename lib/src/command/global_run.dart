@@ -83,10 +83,9 @@ class GlobalRunCommand extends PubCommand {
       vmArgs: vmArgs,
       enableAsserts:
           argResults.flag('enable-asserts') || argResults.flag('checked'),
-      recompile:
-          (executable) => log.errorsOnlyUnlessTerminal(
-            () => globalEntrypoint.precompileExecutable(executable),
-          ),
+      recompile: (executable) => log.errorsOnlyUnlessTerminal(
+        () => globalEntrypoint.precompileExecutable(executable),
+      ),
       alwaysUseSubprocess: alwaysUseSubprocess,
     );
     overrideExitCode(exitCode);

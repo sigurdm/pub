@@ -27,8 +27,9 @@ Future authorizePub(
   );
 
   final line = await pub.stdout.next;
-  final match =
-      RegExp(r'[?&]redirect_uri=([0-9a-zA-Z.%+-]+)[$&]').firstMatch(line)!;
+  final match = RegExp(
+    r'[?&]redirect_uri=([0-9a-zA-Z.%+-]+)[$&]',
+  ).firstMatch(line)!;
   expect(match, isNotNull);
 
   var redirectUrl = Uri.parse(Uri.decodeComponent(match.group(1)!));
@@ -39,8 +40,10 @@ Future authorizePub(
 
   // Call the redirect url as the browser would otherwise do after successful
   // sign-in with Google account.
-  final response =
-      await (http.Request('GET', redirectUrl)..followRedirects = false).send();
+  final response = await (http.Request(
+    'GET',
+    redirectUrl,
+  )..followRedirects = false).send();
   expect(response.headers['location'], equals('https://pub.dev/authorized'));
 }
 
@@ -69,10 +72,9 @@ String _mapToQuery(Map<String, String?> map) {
   final pairs = <List<String?>>[];
   map.forEach((key, value) {
     key = Uri.encodeQueryComponent(key);
-    value =
-        (value == null || value.isEmpty)
-            ? null
-            : Uri.encodeQueryComponent(value);
+    value = (value == null || value.isEmpty)
+        ? null
+        : Uri.encodeQueryComponent(value);
     pairs.add([key, value]);
   });
   return pairs

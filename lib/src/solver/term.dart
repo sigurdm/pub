@@ -170,8 +170,8 @@ class Term {
   /// in which case this returns `null`.
   Term? _nonEmptyTerm(VersionConstraint constraint, bool isPositive) =>
       constraint.isEmpty
-          ? null
-          : Term(package.toRef().withConstraint(constraint), isPositive);
+      ? null
+      : Term(package.toRef().withConstraint(constraint), isPositive);
 
   @override
   String toString() => "${isPositive ? '' : 'not '}$package";

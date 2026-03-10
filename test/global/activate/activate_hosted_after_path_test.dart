@@ -33,7 +33,8 @@ void main() {
     final path = canonicalize(p.join(d.sandbox, 'foo'));
     await runPub(
       args: ['global', 'activate', 'foo'],
-      output: '''
+      output:
+          '''
         Package foo is currently active at path "$path".
         Resolving dependencies...
         Downloading packages...

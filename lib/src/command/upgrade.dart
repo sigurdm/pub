@@ -212,17 +212,16 @@ Consider using the Dart 2.19 sdk to migrate to null safety.''');
   Future<List<String>> _directDependenciesToUpgrade() async {
     assert(_upgradeMajorVersions);
 
-    final directDeps =
-        {
-          for (final package
-              in entrypoint.workspaceRoot.transitiveWorkspace) ...[
-            ...package.dependencies.keys,
-            ...package.devDependencies.keys,
-          ],
-        }.toList();
+    final directDeps = {
+      for (final package in entrypoint.workspaceRoot.transitiveWorkspace) ...[
+        ...package.dependencies.keys,
+        ...package.devDependencies.keys,
+      ],
+    }.toList();
     final packagesToUpgrade = await _packagesToUpgrade;
-    final toUpgrade =
-        packagesToUpgrade.isEmpty ? directDeps : packagesToUpgrade;
+    final toUpgrade = packagesToUpgrade.isEmpty
+        ? directDeps
+        : packagesToUpgrade;
 
     // Check that all package names in upgradeOnly are direct-dependencies
     final notInDeps = toUpgrade.where((n) => !directDeps.contains(n));
@@ -316,8 +315,9 @@ be direct 'dependencies' or 'dev_dependencies', following packages are not:
     //
     // But without a specific package we want to get as many non-major updates
     // as possible (SolveType.upgrade).
-    final solveType =
-        (await _packagesToUpgrade).isEmpty ? SolveType.upgrade : SolveType.get;
+    final solveType = (await _packagesToUpgrade).isEmpty
+        ? SolveType.upgrade
+        : SolveType.get;
 
     entrypoint.applyChanges(changes, _dryRun);
     await entrypoint

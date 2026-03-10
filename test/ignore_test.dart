@@ -32,8 +32,9 @@ void main() {
       final casing = 'with ignoreCase = $ignoreCase';
       test('${c.name}: Ignore.ignores("$path") == $expected $casing', () {
         var hasWarning = false;
-        final pathWithoutSlash =
-            path.endsWith('/') ? path.substring(0, path.length - 1) : path;
+        final pathWithoutSlash = path.endsWith('/')
+            ? path.substring(0, path.length - 1)
+            : path;
 
         Iterable<String> listDir(String dir) {
           // List the next part of path:
@@ -42,14 +43,13 @@ void main() {
           return [path.substring(0, nextSlash == -1 ? path.length : nextSlash)];
         }
 
-        Ignore? ignoreForDir(String dir) =>
-            c.patterns[dir] == null
-                ? null
-                : Ignore(
-                  c.patterns[dir]!,
-                  onInvalidPattern: (_, _) => hasWarning = true,
-                  ignoreCase: ignoreCase,
-                );
+        Ignore? ignoreForDir(String dir) => c.patterns[dir] == null
+            ? null
+            : Ignore(
+                c.patterns[dir]!,
+                onInvalidPattern: (_, _) => hasWarning = true,
+                ignoreCase: ignoreCase,
+              );
 
         bool isDir(String candidate) =>
             candidate == '.' ||
@@ -170,8 +170,9 @@ void main() {
           );
 
           for (final directory in c.patterns.keys) {
-            final resolvedDirectory =
-                directory == '' ? tmp!.uri : tmp!.uri.resolve('$directory/');
+            final resolvedDirectory = directory == ''
+                ? tmp!.uri
+                : tmp!.uri.resolve('$directory/');
             Directory.fromUri(resolvedDirectory).createSync(recursive: true);
             final gitIgnore = File.fromUri(
               resolvedDirectory.resolve('.gitignore'),

@@ -709,19 +709,18 @@ final bool runningFromDartRepo = platform.script.path.contains(_dartRepoRegExp);
 ///
 /// This throws a [StateError] if it's called when not running pub from source
 /// in the Dart repo.
-final String dartRepoRoot =
-    (() {
-      if (!runningFromDartRepo) {
-        throw StateError('Not running from source in the Dart repo.');
-      }
+final String dartRepoRoot = (() {
+  if (!runningFromDartRepo) {
+    throw StateError('Not running from source in the Dart repo.');
+  }
 
-      // Get the URL of the repo root in a way that works when either both
-      // running as a test or as a pub executable.
-      final url = platform.script.replace(
-        path: platform.script.path.replaceAll(_dartRepoRegExp, ''),
-      );
-      return p.fromUri(url);
-    })();
+  // Get the URL of the repo root in a way that works when either both
+  // running as a test or as a pub executable.
+  final url = platform.script.replace(
+    path: platform.script.path.replaceAll(_dartRepoRegExp, ''),
+  );
+  return p.fromUri(url);
+})();
 
 /// Displays a message and reads a yes/no confirmation from the user.
 ///
@@ -1124,10 +1123,9 @@ Future<T> withTempDir<T>(FutureOr<T> Function(String path) fn) async {
 /// If [host] is "localhost", this will automatically listen on both the IPv4
 /// and IPv6 loopback addresses.
 Future<HttpServer> bindServer(String host, int port) async {
-  final server =
-      host == 'localhost'
-          ? await HttpMultiServer.loopback(port)
-          : await HttpServer.bind(host, port);
+  final server = host == 'localhost'
+      ? await HttpMultiServer.loopback(port)
+      : await HttpServer.bind(host, port);
   server.autoCompress = true;
   return server;
 }
@@ -1366,8 +1364,8 @@ final String? dartConfigDir = () {
 /// Otherwise, wrap with single quotation, and use '\'' to insert single quote.
 String escapeShellArgument(String x) =>
     RegExp(r'^[a-zA-Z0-9-_=@.^]+$').stringMatch(x) == null
-        ? "'${x.replaceAll(r'\', r'\\').replaceAll("'", r"'\''")}'"
-        : x;
+    ? "'${x.replaceAll(r'\', r'\\').replaceAll("'", r"'\''")}'"
+    : x;
 
 /// Returns all parent directories of [path], starting from [path] to the
 /// filesystem root.

@@ -44,10 +44,9 @@ class Incompatibility {
     if (terms.length != 1 &&
         cause is ConflictCause &&
         terms.any((term) => term.isPositive && term.package.isRoot)) {
-      terms =
-          terms
-              .where((term) => !term.isPositive || !term.package.isRoot)
-              .toList();
+      terms = terms
+          .where((term) => !term.isPositive || !term.package.isRoot)
+          .toList();
     }
 
     if (terms.length == 1 ||
@@ -79,8 +78,9 @@ class Incompatibility {
       byName.values.expand((byRef) {
         // If there are any positive terms for a given package, we can discard
         // any negative terms.
-        final positiveTerms =
-            byRef.values.where((term) => term.isPositive).toList();
+        final positiveTerms = byRef.values
+            .where((term) => term.isPositive)
+            .toList();
         if (positiveTerms.isNotEmpty) return positiveTerms;
 
         return byRef.values;
@@ -172,14 +172,12 @@ class Incompatibility {
       final term2 = terms.last;
       if (term1.isPositive == term2.isPositive) {
         if (term1.isPositive) {
-          final package1 =
-              term1.constraint.isAny
-                  ? _terseRef(term1, details)
-                  : _terse(term1, details);
-          final package2 =
-              term2.constraint.isAny
-                  ? _terseRef(term2, details)
-                  : _terse(term2, details);
+          final package1 = term1.constraint.isAny
+              ? _terseRef(term1, details)
+              : _terse(term1, details);
+          final package2 = term2.constraint.isAny
+              ? _terseRef(term2, details)
+              : _terse(term2, details);
           return '$package1 is incompatible with $package2';
         } else {
           return 'either ${_terse(term1, details)} or '
@@ -345,10 +343,9 @@ class Incompatibility {
           .join(' or ');
       buffer.write('if $priorString then ');
     } else {
-      final verb =
-          prior.cause is DependencyIncompatibilityCause
-              ? 'depends on'
-              : 'requires';
+      final verb = prior.cause is DependencyIncompatibilityCause
+          ? 'depends on'
+          : 'requires';
       buffer.write(
         '${_terse(priorPositives.first, details, allowEvery: true)} '
         '$verb ',

@@ -41,34 +41,33 @@ class SystemCache {
 
   String get tempDir => p.join(rootDir, '_temp');
 
-  static String defaultDir =
-      (() {
-        final envCache = platform.environment['PUB_CACHE'];
-        if (envCache != null) {
-          return envCache;
-        } else if (platform.isWindows) {
-          // %LOCALAPPDATA% is used as the cache location over %APPDATA%,
-          // because the latter is synchronised between devices when the user
-          // roams between them, whereas the former is not.
-          final localAppData = platform.environment['LOCALAPPDATA'];
-          if (localAppData == null) {
-            dataError('''
+  static String defaultDir = (() {
+    final envCache = platform.environment['PUB_CACHE'];
+    if (envCache != null) {
+      return envCache;
+    } else if (platform.isWindows) {
+      // %LOCALAPPDATA% is used as the cache location over %APPDATA%,
+      // because the latter is synchronised between devices when the user
+      // roams between them, whereas the former is not.
+      final localAppData = platform.environment['LOCALAPPDATA'];
+      if (localAppData == null) {
+        dataError('''
 Could not find the pub cache. No `LOCALAPPDATA` environment variable exists.
 Consider setting the `PUB_CACHE` variable manually.
 ''');
-          }
-          return p.join(localAppData, 'Pub', 'Cache');
-        } else {
-          final home = platform.environment['HOME'];
-          if (home == null) {
-            dataError('''
+      }
+      return p.join(localAppData, 'Pub', 'Cache');
+    } else {
+      final home = platform.environment['HOME'];
+      if (home == null) {
+        dataError('''
 Could not find the pub cache. No `HOME` environment variable exists.
 Consider setting the `PUB_CACHE` variable manually.
 ''');
-          }
-          return p.join(home, '.pub-cache');
-        }
-      })();
+      }
+      return p.join(home, '.pub-cache');
+    }
+  })();
 
   /// The available sources.
   late final _sources = {
@@ -184,22 +183,21 @@ Consider setting the `PUB_CACHE` variable manually.
   }) async {
     var versions = await ref.source.doGetVersions(ref, maxAge, this);
 
-    versions =
-        (await Future.wait(
-          versions.map((id) async {
-            final packageStatus = await ref.source.status(
-              id.toRef(),
-              id.version,
-              this,
-              maxAge: maxAge,
-            );
-            if (!packageStatus.isRetracted ||
-                id.version == allowedRetractedVersion) {
-              return id;
-            }
-            return null;
-          }),
-        )).nonNulls.toList();
+    versions = (await Future.wait(
+      versions.map((id) async {
+        final packageStatus = await ref.source.status(
+          id.toRef(),
+          id.version,
+          this,
+          maxAge: maxAge,
+        );
+        if (!packageStatus.isRetracted ||
+            id.version == allowedRetractedVersion) {
+          return id;
+        }
+        return null;
+      }),
+    )).nonNulls.toList();
 
     return versions;
   }
@@ -456,8 +454,9 @@ https://dart.dev/go/pub-cache
   /// Adds a file to the `PUB_CACHE/active_roots/` dir indicating
   /// [packageConfigPath] is active.
   void markRootActive(String packageConfigPath) {
-    final canonicalFileUri =
-        p.toUri(p.canonicalize(packageConfigPath)).toString();
+    final canonicalFileUri = p
+        .toUri(p.canonicalize(packageConfigPath))
+        .toString();
 
     final hash = hexEncode(sha256.convert(utf8.encode(canonicalFileUri)).bytes);
 

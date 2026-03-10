@@ -36,12 +36,11 @@ Future<List<FlutterRelease>> _flutterReleases = () async {
         'Bad response - releases should be a list of maps.',
       );
     }
-    final channel =
-        {
-          'beta': Channel.beta,
-          'stable': Channel.stable,
-          'dev': Channel.dev,
-        }[release['channel']];
+    final channel = {
+      'beta': Channel.beta,
+      'stable': Channel.stable,
+      'dev': Channel.dev,
+    }[release['channel']];
     if (channel == null) {
       throw const FormatException('Release with bad channel');
     }

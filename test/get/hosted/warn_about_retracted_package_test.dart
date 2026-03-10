@@ -14,10 +14,9 @@ import '../../test_pub.dart';
 
 void main() {
   test('Report retracted packages', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.0.0', deps: {'bar': 'any'})
-          ..serve('bar', '1.0.0');
+    final server = await servePackages()
+      ..serve('foo', '1.0.0', deps: {'bar': 'any'})
+      ..serve('bar', '1.0.0');
     await d.appDir(dependencies: {'foo': '1.0.0'}).create();
 
     await pubGet();
@@ -35,12 +34,11 @@ void main() {
   });
 
   test('Report retracted packages with newer version available', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
-          ..serve('bar', '1.0.0')
-          ..serve('bar', '2.0.0')
-          ..serve('bar', '2.0.1-pre');
+    final server = await servePackages()
+      ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0'})
+      ..serve('bar', '1.0.0')
+      ..serve('bar', '2.0.0')
+      ..serve('bar', '2.0.1-pre');
     await d.appDir(dependencies: {'foo': '1.0.0'}).create();
 
     await pubGet();
@@ -60,11 +58,10 @@ void main() {
   test(
     'Report retracted packages with newer prerelease version available',
     () async {
-      final server =
-          await servePackages()
-            ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0-pre'})
-            ..serve('bar', '1.0.0-pre')
-            ..serve('bar', '2.0.1-pre');
+      final server = await servePackages()
+        ..serve('foo', '1.0.0', deps: {'bar': '^1.0.0-pre'})
+        ..serve('bar', '1.0.0-pre')
+        ..serve('bar', '2.0.1-pre');
       await d.appDir(dependencies: {'foo': '1.0.0'}).create();
 
       await pubGet();

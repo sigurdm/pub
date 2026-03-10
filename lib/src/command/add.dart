@@ -45,7 +45,8 @@ class AddCommand extends PubCommand {
   @override
   String get name => 'add';
   @override
-  String get description => '''
+  String get description =>
+      '''
 Add dependencies to `pubspec.yaml`.
 
 Invoking `dart pub add foo bar` will add `foo` and `bar` to `pubspec.yaml`
@@ -191,8 +192,9 @@ Specify multiple sdk packages with descriptors.''');
       usageException('Must specify at least one package to be added.');
     }
 
-    final updates =
-        argResults.rest.map((p) => _parsePackage(p, argResults)).toList();
+    final updates = argResults.rest
+        .map((p) => _parsePackage(p, argResults))
+        .toList();
 
     /// Compute a pubspec that will depend on all the given packages, but the
     /// actual constraint will only be determined after a resolution decides the
@@ -411,10 +413,9 @@ Specify multiple sdk packages with descriptors.''');
             'The only allowed prefixes are "dev:" and "override:"',
           );
         } else {
-          final packageName =
-              match2.namedGroup('descriptor') == null
-                  ? match2.namedGroup('prefix')
-                  : match2.namedGroup('name');
+          final packageName = match2.namedGroup('descriptor') == null
+              ? match2.namedGroup('prefix')
+              : match2.namedGroup('name');
           usageException('Not a valid package name: "$packageName"');
         }
       }
@@ -499,9 +500,8 @@ Specify multiple sdk packages with descriptors.''');
       ['sdk'],
     ];
 
-    for (final flag in conflictingFlagSets
-        .expand((s) => s)
-        .where(argResults.wasParsed)) {
+    for (final flag
+        in conflictingFlagSets.expand((s) => s).where(argResults.wasParsed)) {
       final conflictingFlag = conflictingFlagSets
           .where((s) => !s.contains(flag))
           .expand((s) => s)
@@ -518,8 +518,9 @@ Specify multiple sdk packages with descriptors.''');
     /// preserve the fact that the user did not specify a constraint.
     VersionConstraint? constraint;
     try {
-      constraint =
-          descriptor == null ? null : VersionConstraint.parse(descriptor);
+      constraint = descriptor == null
+          ? null
+          : VersionConstraint.parse(descriptor);
     } on FormatException catch (e) {
       var couldParseAsNewStyle = true;
       try {
@@ -712,10 +713,9 @@ Specify multiple sdk packages with descriptors.''');
     log.fine('Contents:\n$yamlEditor');
 
     for (final update in updates) {
-      final dependencyKey =
-          update.isDev
-              ? 'dev_dependencies'
-              : (update.isOverride ? 'dependency_overrides' : 'dependencies');
+      final dependencyKey = update.isDev
+          ? 'dev_dependencies'
+          : (update.isOverride ? 'dependency_overrides' : 'dependencies');
       final constraint = update.constraint;
       final ref = update.ref;
       final name = ref.name;

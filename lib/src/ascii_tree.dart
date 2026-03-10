@@ -69,8 +69,9 @@ String fromFiles(
   // Parse out the files into a tree of nested maps.
   final root = <String, Map>{};
   for (var file in files) {
-    final relativeFile =
-        baseDir == null ? file : p.relative(file, from: baseDir);
+    final relativeFile = baseDir == null
+        ? file
+        : p.relative(file, from: baseDir);
     final parts = p.split(relativeFile);
     if (showFileSizes) {
       final stat = File(p.normalize(file)).statSync();

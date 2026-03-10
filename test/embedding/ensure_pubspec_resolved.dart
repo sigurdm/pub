@@ -520,14 +520,15 @@ Future<void> _noImplicitPubGet({Map<String, String?>? environment}) async {
   expect(output, isNot(contains('Resolving dependencies')));
   // If pub determines that everything is up-to-date, it should set the
   // mtimes to indicate that.
-  final pubspecModified =
-      File(p.join(d.sandbox, 'myapp/pubspec.yaml')).lastModifiedSync();
-  final lockFileModified =
-      File(p.join(d.sandbox, 'myapp/pubspec.lock')).lastModifiedSync();
-  final packageConfigModified =
-      File(
-        p.join(d.sandbox, 'myapp/.dart_tool/package_config.json'),
-      ).lastModifiedSync();
+  final pubspecModified = File(
+    p.join(d.sandbox, 'myapp/pubspec.yaml'),
+  ).lastModifiedSync();
+  final lockFileModified = File(
+    p.join(d.sandbox, 'myapp/pubspec.lock'),
+  ).lastModifiedSync();
+  final packageConfigModified = File(
+    p.join(d.sandbox, 'myapp/.dart_tool/package_config.json'),
+  ).lastModifiedSync();
 
   expect(!pubspecModified.isAfter(lockFileModified), isTrue);
   expect(!lockFileModified.isAfter(packageConfigModified), isTrue);

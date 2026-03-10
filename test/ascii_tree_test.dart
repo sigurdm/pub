@@ -56,13 +56,12 @@ void main() {
       file('README.md', bytes(100)),
       dir('lib', [file('path.dart', bytes(100))]),
     ]).create();
-    final files =
-        Package.load(
-          path(appPath),
-          loadPubspec: Pubspec.loadRootWithSources(
-            (name) => throw UnimplementedError(),
-          ),
-        ).listFiles();
+    final files = Package.load(
+      path(appPath),
+      loadPubspec: Pubspec.loadRootWithSources(
+        (name) => throw UnimplementedError(),
+      ),
+    ).listFiles();
     ctx.expectNextSection(
       tree.fromFiles(files, baseDir: path(appPath), showFileSizes: true),
     );

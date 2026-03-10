@@ -109,18 +109,15 @@ class Entrypoint {
       if (pubspec.resolution == Resolution.none) {
         root = Package.load(
           dir,
-          loadPubspec:
-              (path, {expectedName, required withPubspecOverrides}) =>
-                  pubspecsMet[p.canonicalize(path)] ??
-                  Pubspec.load(
-                    path,
-                    cache.sources,
-                    expectedName: expectedName,
-                    allowOverridesFile: withPubspecOverrides,
-                    containingDescription: ResolvedRootDescription.fromDir(
-                      path,
-                    ),
-                  ),
+          loadPubspec: (path, {expectedName, required withPubspecOverrides}) =>
+              pubspecsMet[p.canonicalize(path)] ??
+              Pubspec.load(
+                path,
+                cache.sources,
+                expectedName: expectedName,
+                allowOverridesFile: withPubspecOverrides,
+                containingDescription: ResolvedRootDescription.fromDir(path),
+              ),
           withPubspecOverrides: true,
         );
         for (final package in root.transitiveWorkspace) {
@@ -429,11 +426,10 @@ See $workspacesDocUrl for more information.''',
       packageConfigPath,
       await _packageConfigFile(
         cache,
-        entrypointSdkConstraint:
-            workspaceRoot
-                .pubspec
-                .sdkConstraints[sdk.identifier]
-                ?.effectiveConstraint,
+        entrypointSdkConstraint: workspaceRoot
+            .pubspec
+            .sdkConstraints[sdk.identifier]
+            ?.effectiveConstraint,
       ),
     );
     writeTextFileIfDifferent(packageGraphPath, await _packageGraphFile(cache));
@@ -460,8 +456,8 @@ See $workspacesDocUrl for more information.''',
 
   Future<String> _packageGraphFile(SystemCache cache) async {
     return const JsonEncoder.withIndent('  ').convert({
-      'roots':
-          workspaceRoot.transitiveWorkspace.map((p) => p.name).toList()..sort(),
+      'roots': workspaceRoot.transitiveWorkspace.map((p) => p.name).toList()
+        ..sort(),
       'packages': [
         for (final p in workspaceRoot.transitiveWorkspace)
           {
@@ -474,8 +470,8 @@ See $workspacesDocUrl for more information.''',
           {
             'name': p.name,
             'version': p.version.toString(),
-            'dependencies':
-                (await cache.describe(p)).dependencies.keys.toList()..sort(),
+            'dependencies': (await cache.describe(p)).dependencies.keys.toList()
+              ..sort(),
           },
       ],
       'configVersion': 1,
@@ -535,8 +531,9 @@ See $workspacesDocUrl for more information.''',
       generatorVersion: sdk.version,
       additionalProperties: {
         if (FlutterSdk().isAvailable) ...{
-          'flutterRoot':
-              p.toUri(p.absolute(FlutterSdk().rootDirectory!)).toString(),
+          'flutterRoot': p
+              .toUri(p.absolute(FlutterSdk().rootDirectory!))
+              .toString(),
           'flutterVersion': FlutterSdk().version.toString(),
         },
         'pubCache': p.toUri(p.absolute(cache.rootDir)).toString(),
@@ -582,10 +579,9 @@ See $workspacesDocUrl for more information.''',
   }) async {
     workspaceRoot; // This will throw early if pubspec.yaml could not be found.
     summaryOnly = summaryOnly || _summaryOnlyEnvironment;
-    final suffix =
-        workspaceRoot.dir == '.'
-            ? ''
-            : ' in `${workspaceRoot.presentationDir}`';
+    final suffix = workspaceRoot.dir == '.'
+        ? ''
+        : ' in `${workspaceRoot.presentationDir}`';
 
     if (enforceLockfile && !fileExists(lockFilePath)) {
       throw ApplicationException('''
@@ -687,13 +683,12 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
   /// the package itself if they are immutable.
   Future<List<Executable>> get _builtExecutables async {
     final graph = await packageGraph;
-    final r =
-        workspaceRoot.immediateDependencies.keys.expand((packageName) {
-          final package = graph.packages[packageName]!;
-          return package.executablePaths.map(
-            (path) => Executable(packageName, path),
-          );
-        }).toList();
+    final r = workspaceRoot.immediateDependencies.keys.expand((packageName) {
+      final package = graph.packages[packageName]!;
+      return package.executablePaths.map(
+        (path) => Executable(packageName, path),
+      );
+    }).toList();
     return r;
   }
 
@@ -946,11 +941,10 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
         // Check that [packagePathsMapping] does not contain more packages than
         // what is required. This could lead to import statements working, when
         // they are not supposed to work.
-        final hasExtraMappings =
-            !packagePathsMapping.keys.every((packageName) {
-              return packageName == root.name ||
-                  lockFile.packages.containsKey(packageName);
-            });
+        final hasExtraMappings = !packagePathsMapping.keys.every((packageName) {
+          return packageName == root.name ||
+              lockFile.packages.containsKey(packageName);
+        });
         if (hasExtraMappings) {
           return false;
         }
@@ -1180,10 +1174,9 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
     // sdk-packages, and therefore do a new resolution.
     //
     // This also counts if Flutter was introduced or removed.
-    final flutterRoot =
-        flutter.rootDirectory == null
-            ? null
-            : p.toUri(p.absolute(flutter.rootDirectory!)).toString();
+    final flutterRoot = flutter.rootDirectory == null
+        ? null
+        : p.toUri(p.absolute(flutter.rootDirectory!)).toString();
     if (packageConfig.additionalProperties['flutterRoot'] != flutterRoot) {
       log.fine('Flutter has moved since last invocation.');
       return null;
@@ -1557,8 +1550,9 @@ See https://dart.dev/go/sdk-constraint
         final deps = package.dependencies.keys;
 
         for (final change in changesForPackage.values) {
-          final section =
-              deps.contains(change.name) ? 'dependencies' : 'dev_dependencies';
+          final section = deps.contains(change.name)
+              ? 'dependencies'
+              : 'dev_dependencies';
           yamlEditor.update([
             section,
             change.name,

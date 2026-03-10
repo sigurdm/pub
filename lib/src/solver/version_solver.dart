@@ -514,13 +514,12 @@ class VersionSolver {
       // way that doesn't fetch.
       List<PackageId> ids;
       try {
-        ids =
-            package.source is HostedSource
-                ? await _systemCache.getVersions(
-                  package.toRef(),
-                  maxAge: const Duration(days: 3),
-                )
-                : [package];
+        ids = package.source is HostedSource
+            ? await _systemCache.getVersions(
+                package.toRef(),
+                maxAge: const Duration(days: 3),
+              )
+            : [package];
       } on Exception {
         ids = <PackageId>[package];
       }

@@ -60,11 +60,10 @@ void main() {
 
   group('should warn if it', () {
     final currentVersion = Version.parse(Platform.version.split(' ').first);
-    final nextLanguageVersion =
-        LanguageVersion(
-          currentVersion.major,
-          currentVersion.minor + 1,
-        ).toString();
+    final nextLanguageVersion = LanguageVersion(
+      currentVersion.major,
+      currentVersion.minor + 1,
+    ).toString();
 
     test('opts in to a newer version.', () async {
       await setup(

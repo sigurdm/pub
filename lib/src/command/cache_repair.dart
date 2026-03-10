@@ -113,8 +113,8 @@ class CacheRepairCommand extends PubCommand {
       log.message(buffer.toString());
     }
 
-    final (repairSuccesses, repairFailures) =
-        await globals.repairActivatedPackages();
+    final (repairSuccesses, repairFailures) = await globals
+        .repairActivatedPackages();
     if (repairSuccesses.isNotEmpty) {
       final packages = pluralize('package', repairSuccesses.length);
       log.message(
@@ -155,8 +155,9 @@ class CacheRepairCommand extends PubCommand {
   ///   cache directory names).
   (bool Function(String, Version), bool Function(String, Version))
   _buildPackageFilters(List<PackageId> packages) {
-    final hostedPackages =
-        packages.where((p) => p.source is HostedSource).toList();
+    final hostedPackages = packages
+        .where((p) => p.source is HostedSource)
+        .toList();
     final gitPackages = packages.where((p) => p.source is GitSource).toList();
 
     return (

@@ -55,8 +55,9 @@ class SdkPackageConfig {
       );
     }
     final packages = <String, SdkPackage>{};
-    final packageDescriptions =
-        yaml.expectField<YamlList>('packages').expectElements<YamlMap>();
+    final packageDescriptions = yaml
+        .expectField<YamlList>('packages')
+        .expectElements<YamlMap>();
     for (var description in packageDescriptions) {
       final package = SdkPackage.fromYaml(description);
       packages[package.name] = package;

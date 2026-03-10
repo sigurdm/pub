@@ -77,8 +77,9 @@ To remove a dependency override of a package prefix the package name with
 
     final targets = Set<String>.from(argResults.rest).map((descriptor) {
       final isOverride = descriptor.startsWith('override:');
-      final name =
-          isOverride ? descriptor.substring('override:'.length) : descriptor;
+      final name = isOverride
+          ? descriptor.substring('override:'.length)
+          : descriptor;
       return _PackageRemoval(name, removeFromOverride: isOverride);
     });
 
@@ -140,10 +141,9 @@ To remove a dependency override of a package prefix the package name with
     );
 
     for (final package in packages) {
-      final dependencyKeys =
-          package.removeFromOverride
-              ? ['dependency_overrides']
-              : ['dependencies', 'dev_dependencies'];
+      final dependencyKeys = package.removeFromOverride
+          ? ['dependency_overrides']
+          : ['dependencies', 'dev_dependencies'];
       var found = false;
       final name = package.name;
 

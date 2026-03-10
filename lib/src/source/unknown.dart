@@ -58,10 +58,9 @@ class UnknownSource extends Source {
     PackageRef ref,
     Duration? maxAge,
     SystemCache cache,
-  ) =>
-      throw UnsupportedError(
-        "Cannot get package versions from unknown source '$name'.",
-      );
+  ) => throw UnsupportedError(
+    "Cannot get package versions from unknown source '$name'.",
+  );
 
   @override
   Future<Pubspec> doDescribe(PackageId id, SystemCache cache) =>
@@ -75,10 +74,9 @@ class UnknownSource extends Source {
     PackageId id,
     SystemCache cache, {
     String? relativeFrom,
-  }) =>
-      throw UnsupportedError(
-        "Cannot find a package from an unknown source '$name'.",
-      );
+  }) => throw UnsupportedError(
+    "Cannot find a package from an unknown source '$name'.",
+  );
 }
 
 class UnknownDescription extends Description {

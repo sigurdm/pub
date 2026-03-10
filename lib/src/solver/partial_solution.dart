@@ -124,8 +124,9 @@ class PartialSolution {
     final ref = assignment.package.toRef();
     final negativeByRef = _negative[name];
     final oldNegative = negativeByRef == null ? null : negativeByRef[ref];
-    final term =
-        oldNegative == null ? assignment : assignment.intersect(oldNegative)!;
+    final term = oldNegative == null
+        ? assignment
+        : assignment.intersect(oldNegative)!;
 
     if (term.isPositive) {
       _negative.remove(name);
@@ -154,10 +155,9 @@ class PartialSolution {
         return assignment;
       }
 
-      assignedTerm =
-          assignedTerm == null
-              ? assignment
-              : assignedTerm.intersect(assignment);
+      assignedTerm = assignedTerm == null
+          ? assignment
+          : assignedTerm.intersect(assignment);
 
       // As soon as we have enough assignments to satisfy [term], return them.
       if (assignedTerm!.satisfies(term)) return assignment;

@@ -80,11 +80,11 @@ class PathSource extends Source {
         PathDescription(
           isRelative
               ? p.normalize(
-                p.join(
-                  p.absolute(containingDescription.description.path),
-                  description,
-                ),
-              )
+                  p.join(
+                    p.absolute(containingDescription.description.path),
+                    description,
+                  ),
+                )
               : description,
           isRelative,
         ),
@@ -298,8 +298,8 @@ class PathDescription extends Description {
   }) {
     return relative
         ? PathSource.relativePathWithPosixSeparators(
-          p.relative(path, from: containingDir),
-        )
+            p.relative(path, from: containingDir),
+          )
         : path;
   }
 

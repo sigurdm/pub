@@ -219,17 +219,16 @@ class PackageServer {
   String get url => _inner.url.toString();
 
   /// From now on report errors on any request.
-  void serveErrors() =>
-      _handlers
-        ..clear()
-        ..add(
-          _PatternAndHandler(RegExp('.*'), (request) {
-            fail(
-              'The HTTP server received an unexpected request:\n'
-              '${request.method} ${request.requestedUri}',
-            );
-          }),
+  void serveErrors() => _handlers
+    ..clear()
+    ..add(
+      _PatternAndHandler(RegExp('.*'), (request) {
+        fail(
+          'The HTTP server received an unexpected request:\n'
+          '${request.method} ${request.requestedUri}',
         );
+      }),
+    );
 
   void handle(Pattern pattern, shelf.Handler handler) {
     _handlers.add(_PatternAndHandler(pattern, handler));

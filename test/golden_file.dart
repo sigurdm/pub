@@ -24,15 +24,14 @@ final _isCI = () {
 }();
 
 /// Find the current `_test.dart` filename invoked from stack-trace.
-String _findCurrentTestFilename() =>
-    Trace.current().frames
-        .lastWhere(
-          (frame) =>
-              frame.uri.isScheme('file') &&
-              p.basename(frame.uri.toFilePath()).endsWith('_test.dart'),
-        )
-        .uri
-        .toFilePath();
+String _findCurrentTestFilename() => Trace.current().frames
+    .lastWhere(
+      (frame) =>
+          frame.uri.isScheme('file') &&
+          p.basename(frame.uri.toFilePath()).endsWith('_test.dart'),
+    )
+    .uri
+    .toFilePath();
 
 class GoldenTestContext {
   static const _endOfSection =

@@ -45,16 +45,15 @@ void main() {
         await pubCommand(
           command,
           args: ['--example'],
-          output:
-              command.name == 'get'
-                  ? '''
+          output: command.name == 'get'
+              ? '''
 Resolving dependencies...
 Downloading packages...
 Got dependencies!
 Resolving dependencies in `$dotExample`...
 Downloading packages...
 Got dependencies in `$dotExample`.'''
-                  : '''
+              : '''
 Resolving dependencies... 
 Downloading packages...
 No dependencies changed.

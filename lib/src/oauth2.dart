@@ -632,11 +632,10 @@ class _AuthorizationCodeGrant {
 
   // Randomly generate a 128 character string to be used as the PKCE code
   // verifier.
-  static String _createCodeVerifier() =>
-      List.generate(
-        128,
-        (i) => _charset[Random.secure().nextInt(_charset.length)],
-      ).join();
+  static String _createCodeVerifier() => List.generate(
+    128,
+    (i) => _charset[Random.secure().nextInt(_charset.length)],
+  ).join();
 
   /// Closes the grant and frees its resources.
   ///
@@ -1270,12 +1269,9 @@ Credentials _handleAccessTokenResponse(
     final scope = parameters['scope'] as String?;
     if (scope != null) scopes = scope.split(delimiter);
 
-    final expiration =
-        expiresIn == null
-            ? null
-            : startTime.add(
-              Duration(seconds: expiresIn as int) - _expirationGrace,
-            );
+    final expiration = expiresIn == null
+        ? null
+        : startTime.add(Duration(seconds: expiresIn as int) - _expirationGrace);
 
     return Credentials(
       parameters['access_token'] as String,
@@ -1316,8 +1312,9 @@ void _handleErrorResponse(
   }
 
   final contentTypeString = response.headers['content-type'];
-  final contentType =
-      contentTypeString == null ? null : MediaType.parse(contentTypeString);
+  final contentType = contentTypeString == null
+      ? null
+      : MediaType.parse(contentTypeString);
 
   final parameters = getParameters(contentType, response.body);
 

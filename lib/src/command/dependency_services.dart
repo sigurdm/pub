@@ -94,8 +94,9 @@ class DependencyServicesReportCommand extends PubCommand {
     final dependencies = <Object>[];
     final result = <String, Object>{'dependencies': dependencies};
 
-    final targetPackage =
-        targetPackageName == null ? null : currentPackages[targetPackageName];
+    final targetPackage = targetPackageName == null
+        ? null
+        : currentPackages[targetPackageName];
 
     for (final package
         in targetPackage == null
@@ -170,34 +171,30 @@ class DependencyServicesReportCommand extends PubCommand {
         'version': package.versionOrHash(),
         'kind': kind,
         'source': _source(package, containingDir: directory),
-        'latest':
-            (await cache.getLatest(
-              package.toRef(),
-              version: package.version,
-            ))?.versionOrHash(),
-        'constraint':
-            _constraintIntersection(
-              compatibleWorkspace,
-              package.name,
-            )?.toString(),
+        'latest': (await cache.getLatest(
+          package.toRef(),
+          version: package.version,
+        ))?.versionOrHash(),
+        'constraint': _constraintIntersection(
+          compatibleWorkspace,
+          package.name,
+        )?.toString(),
         'compatible': await computeUpgradeSet(
           compatibleVersion,
           _UpgradeType.compatible,
         ),
-        'singleBreaking':
-            kind != 'transitive' && singleBreakingVersion == null
-                ? <Object>[]
-                : await computeUpgradeSet(
-                  singleBreakingVersion,
-                  _UpgradeType.singleBreaking,
-                ),
-        'multiBreaking':
-            kind != 'transitive' && multiBreakingVersion != null
-                ? await computeUpgradeSet(
-                  multiBreakingVersion,
-                  _UpgradeType.multiBreaking,
-                )
-                : <Object>[],
+        'singleBreaking': kind != 'transitive' && singleBreakingVersion == null
+            ? <Object>[]
+            : await computeUpgradeSet(
+                singleBreakingVersion,
+                _UpgradeType.singleBreaking,
+              ),
+        'multiBreaking': kind != 'transitive' && multiBreakingVersion != null
+            ? await computeUpgradeSet(
+                multiBreakingVersion,
+                _UpgradeType.multiBreaking,
+              )
+            : <Object>[],
         if (smallestUpgrade != null)
           'smallestUpdate': await computeUpgradeSet(
             smallestUpgrade,
@@ -232,11 +229,9 @@ class DependencyServicesListCommand extends PubCommand {
   @override
   Future<void> runProtected() async {
     _checkAtRoot(entrypoint);
-    final currentPackages =
-        fileExists(entrypoint.lockFilePath)
-            ? entrypoint.lockFile.packages.values.toList()
-            : (await _tryResolve(entrypoint.workspaceRoot, cache) ??
-                <PackageId>[]);
+    final currentPackages = fileExists(entrypoint.lockFilePath)
+        ? entrypoint.lockFile.packages.values.toList()
+        : (await _tryResolve(entrypoint.workspaceRoot, cache) ?? <PackageId>[]);
 
     final dependencies = <Object>[];
     final result = <String, Object>{'dependencies': dependencies};
@@ -246,11 +241,10 @@ class DependencyServicesListCommand extends PubCommand {
         'name': package.name,
         'version': package.versionOrHash(),
         'kind': _kindString(entrypoint.workspaceRoot, package.name),
-        'constraint':
-            _constraintIntersection(
-              entrypoint.workspaceRoot,
-              package.name,
-            )?.toString(),
+        'constraint': _constraintIntersection(
+          entrypoint.workspaceRoot,
+          package.name,
+        )?.toString(),
         'source': _source(package, containingDir: directory),
       });
     }
@@ -338,16 +332,17 @@ class DependencyServicesApplyCommand extends PubCommand {
         final targetConstraint = p.constraint;
         final targetPackage = p.name;
         final targetVersion = p.version;
-        late final section =
-            pubspec.dependencies[targetPackage] != null
-                ? 'dependencies'
-                : pubspec.devDependencies[targetPackage] != null
-                ? 'dev_dependencies'
-                : null;
+        late final section = pubspec.dependencies[targetPackage] != null
+            ? 'dependencies'
+            : pubspec.devDependencies[targetPackage] != null
+            ? 'dev_dependencies'
+            : null;
         if (section != null) {
           if (targetConstraint != null) {
-            final packageConfig =
-                pubspecEditor.parseAt([section, targetPackage]).value;
+            final packageConfig = pubspecEditor.parseAt([
+              section,
+              targetPackage,
+            ]).value;
             if (packageConfig == null || packageConfig is String) {
               pubspecEditor.update([
                 section,
@@ -378,10 +373,9 @@ class DependencyServicesApplyCommand extends PubCommand {
       }
       updatedPubspecs[package.dir] = pubspecEditor;
     }
-    final lockFile =
-        fileExists(entrypoint.lockFilePath)
-            ? readTextFile(entrypoint.lockFilePath)
-            : null;
+    final lockFile = fileExists(entrypoint.lockFilePath)
+        ? readTextFile(entrypoint.lockFilePath)
+        : null;
     final lockFileYaml = lockFile == null ? null : loadYaml(lockFile);
 
     final lockFileEditor = lockFile == null ? null : YamlEditor(lockFile);
@@ -468,14 +462,13 @@ class DependencyServicesApplyCommand extends PubCommand {
       }
     }
 
-    final updatedLockfile =
-        lockFileEditor == null
-            ? null
-            : LockFile.parse(
-              lockFileEditor.toString(),
-              cache.sources,
-              filePath: entrypoint.lockFilePath,
-            );
+    final updatedLockfile = lockFileEditor == null
+        ? null
+        : LockFile.parse(
+            lockFileEditor.toString(),
+            cache.sources,
+            filePath: entrypoint.lockFilePath,
+          );
     await log.errorsOnlyUnlessTerminal(() async {
       final updatedWorkspace = entrypoint.workspaceRoot.transformWorkspace(
         (package) => Pubspec.parse(
@@ -740,10 +733,9 @@ VersionConstraint? _constraintIntersection(
   Package workspace,
   String packageName,
 ) {
-  final constraints =
-      workspace.transitiveWorkspace
-          .map((p) => _constraintOf(p.pubspec, packageName))
-          .nonNulls;
+  final constraints = workspace.transitiveWorkspace
+      .map((p) => _constraintOf(p.pubspec, packageName))
+      .nonNulls;
   if (constraints.isEmpty) {
     return null;
   }
@@ -764,8 +756,8 @@ String _kindString(Package workspace, String packageName) {
       )
       ? 'direct'
       : workspace.transitiveWorkspace.any(
-        (p) => p.devDependencies.containsKey(packageName),
-      )
+          (p) => p.devDependencies.containsKey(packageName),
+        )
       ? 'dev'
       : 'transitive';
 }
@@ -817,9 +809,9 @@ Future<List<Object>> _computeUpgradeSet(
   final lockFile = entrypoint.lockFile;
   final upgradedWorkspace =
       (upgradeType == _UpgradeType.multiBreaking ||
-              upgradeType == _UpgradeType.smallestUpdate)
-          ? workspace.transformWorkspace((p) => stripVersionBounds(p.pubspec))
-          : workspace.transformWorkspace((p) => p.pubspec.copyWith());
+          upgradeType == _UpgradeType.smallestUpdate)
+      ? workspace.transformWorkspace((p) => stripVersionBounds(p.pubspec))
+      : workspace.transformWorkspace((p) => p.pubspec.copyWith());
 
   for (final p in upgradedWorkspace.transitiveWorkspace) {
     final dependencySet = _dependencySetOfPackage(p.pubspec, package);
@@ -864,44 +856,34 @@ Future<List<Object>> _computeUpgradeSet(
             'version': p.versionOrHash(),
             'kind': _kindString(workspace, p.name),
             'source': _source(p, containingDir: entrypoint.workspaceRoot.dir),
-            'constraintBumped':
-                constraintIntersection == null
-                    ? null
-                    : upgradeType == _UpgradeType.compatible
-                    ? constraintIntersection.toString()
-                    : _bumpConstraint(
-                      constraintIntersection,
-                      p.version,
-                    ).toString(),
-            'constraintWidened':
-                constraintIntersection == null
-                    ? null
-                    : upgradeType == _UpgradeType.compatible
-                    ? constraintIntersection.toString()
-                    : _widenConstraint(
-                      constraintIntersection,
-                      p.version,
-                    ).toString(),
-            'constraintBumpedIfNeeded':
-                constraintIntersection == null
-                    ? null
-                    : upgradeType == _UpgradeType.compatible
-                    ? constraintIntersection.toString()
-                    : constraintIntersection.allows(p.version)
-                    ? constraintIntersection.toString()
-                    : _bumpConstraint(
-                      constraintIntersection,
-                      p.version,
-                    ).toString(),
+            'constraintBumped': constraintIntersection == null
+                ? null
+                : upgradeType == _UpgradeType.compatible
+                ? constraintIntersection.toString()
+                : _bumpConstraint(constraintIntersection, p.version).toString(),
+            'constraintWidened': constraintIntersection == null
+                ? null
+                : upgradeType == _UpgradeType.compatible
+                ? constraintIntersection.toString()
+                : _widenConstraint(
+                    constraintIntersection,
+                    p.version,
+                  ).toString(),
+            'constraintBumpedIfNeeded': constraintIntersection == null
+                ? null
+                : upgradeType == _UpgradeType.compatible
+                ? constraintIntersection.toString()
+                : constraintIntersection.allows(p.version)
+                ? constraintIntersection.toString()
+                : _bumpConstraint(constraintIntersection, p.version).toString(),
             'previousVersion': currentPackage?.versionOrHash(),
             'previousConstraint': constraintIntersection?.toString(),
-            'previousSource':
-                currentPackage == null
-                    ? null
-                    : _source(
-                      currentPackage,
-                      containingDir: entrypoint.workspaceRoot.dir,
-                    ),
+            'previousSource': currentPackage == null
+                ? null
+                : _source(
+                    currentPackage,
+                    containingDir: entrypoint.workspaceRoot.dir,
+                  ),
           };
         }),
     // Find packages that were removed by the resolution

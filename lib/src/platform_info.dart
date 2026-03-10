@@ -22,8 +22,8 @@ abstract final class PlatformInfo {
 
   factory PlatformInfo.defaultPlatform() =>
       const bool.fromEnvironment('dart.library.io')
-          ? const _NativePlatformInfo()
-          : const _BrowserPlatformInfo();
+      ? const _NativePlatformInfo()
+      : const _BrowserPlatformInfo();
 
   factory PlatformInfo.override({
     Map<String, String>? environment,

@@ -49,26 +49,25 @@ class GitStatusValidator extends Validator {
     }
     final List<String> modifiedFiles;
     try {
-      modifiedFiles =
-          git
-              .splitZeroTerminated(output, skipPrefix: 3)
-              .map((bytes) {
-                try {
-                  final filename = utf8.decode(bytes);
-                  final fullPath = p.join(reporoot, filename);
-                  if (!files.any((f) => p.equals(fullPath, f))) {
-                    // File is not in the published set - ignore.
-                    return null;
-                  }
-                  return p.relative(fullPath);
-                } on FormatException catch (e) {
-                  // Filename is not utf8 - ignore.
-                  log.fine('Cannot decode file name: $e');
-                  return null;
-                }
-              })
-              .nonNulls
-              .toList();
+      modifiedFiles = git
+          .splitZeroTerminated(output, skipPrefix: 3)
+          .map((bytes) {
+            try {
+              final filename = utf8.decode(bytes);
+              final fullPath = p.join(reporoot, filename);
+              if (!files.any((f) => p.equals(fullPath, f))) {
+                // File is not in the published set - ignore.
+                return null;
+              }
+              return p.relative(fullPath);
+            } on FormatException catch (e) {
+              // Filename is not utf8 - ignore.
+              log.fine('Cannot decode file name: $e');
+              return null;
+            }
+          })
+          .nonNulls
+          .toList();
     } on FormatException catch (e) {
       // Malformed output from `git status`. Skip this validation.
       log.fine('Malformed output from `git status -z`: $e');

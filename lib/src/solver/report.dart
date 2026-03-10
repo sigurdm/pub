@@ -266,19 +266,17 @@ $contentHashesDocumentationUrl
   /// Displays a two-line message, number of outdated packages and an
   /// instruction to run `pub outdated` if outdated packages are detected.
   void reportOutdated() {
-    final outdatedPackagesCount =
-        _newLockFile.packages.values.where((id) {
-          final versions = _availableVersions[id.name]!;
-          // A version is counted:
-          // - if there is a newer version which is not a pre-release and
-          //   current version is also not a pre-release or,
-          // - if the current version is pre-release then any upgraded version
-          //   is considered.
-          return versions.any(
-            (v) =>
-                v > id.version && (id.version.isPreRelease || !v.isPreRelease),
-          );
-        }).length;
+    final outdatedPackagesCount = _newLockFile.packages.values.where((id) {
+      final versions = _availableVersions[id.name]!;
+      // A version is counted:
+      // - if there is a newer version which is not a pre-release and
+      //   current version is also not a pre-release or,
+      // - if the current version is pre-release then any upgraded version
+      //   is considered.
+      return versions.any(
+        (v) => v > id.version && (id.version.isPreRelease || !v.isPreRelease),
+      );
+    }).length;
 
     if (outdatedPackagesCount > 0) {
       String packageCountString;
@@ -310,10 +308,10 @@ $contentHashesDocumentationUrl
 
   static DependencyType dependencyType(LockFile lockFile, String name) =>
       lockFile.mainDependencies.contains(name)
-          ? DependencyType.direct
-          : lockFile.devDependencies.contains(name)
-          ? DependencyType.dev
-          : DependencyType.none;
+      ? DependencyType.direct
+      : lockFile.devDependencies.contains(name)
+      ? DependencyType.dev
+      : DependencyType.none;
 
   String? _constructAdvisoriesMessage(
     List<int> footnotes,
@@ -432,11 +430,10 @@ $contentHashesDocumentationUrl
         final advisoryFootnotes = <int>[];
         final reportedAdvisories = advisories
             .where(
-              (adv) =>
-                  _rootPubspec.ignoredAdvisories.intersection({
-                    ...adv.aliases,
-                    adv.id,
-                  }).isEmpty,
+              (adv) => _rootPubspec.ignoredAdvisories.intersection({
+                ...adv.aliases,
+                adv.id,
+              }).isEmpty,
             )
             .take(maxAdvisoryFootnotesPerLine);
         for (final adv in reportedAdvisories) {
@@ -534,8 +531,8 @@ $contentHashesDocumentationUrl
       final location = _location;
       final overrideLocation =
           location != null && _rootPubspec.dependencyOverridesFromOverridesFile
-              ? ' in ${p.join(location, Pubspec.pubspecOverridesFilename)}'
-              : '';
+          ? ' in ${p.join(location, Pubspec.pubspecOverridesFilename)}'
+          : '';
       output.write(' ${log.magenta('(overridden$overrideLocation)')}');
     }
 

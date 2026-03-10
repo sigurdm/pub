@@ -42,10 +42,9 @@ void main() {
     test('reinstalls previously cached git packages', () async {
       // Find the cached foo packages for each revision.
       final gitCacheDir = p.join(d.sandbox, cachePath, 'git');
-      final fooDirs =
-          listDir(
-            gitCacheDir,
-          ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
+      final fooDirs = listDir(
+        gitCacheDir,
+      ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
 
       // Delete "foo.dart" from them.
       for (var dir in fooDirs) {
@@ -62,23 +61,21 @@ void main() {
       );
 
       // The missing libraries should have been replaced.
-      final fooLibs =
-          fooDirs.map((dir) {
-            final fooDirName = p.basename(dir);
-            return d.dir(fooDirName, [
-              d.dir('lib', [d.file('foo.dart', 'main() => "foo";')]),
-            ]);
-          }).toList();
+      final fooLibs = fooDirs.map((dir) {
+        final fooDirName = p.basename(dir);
+        return d.dir(fooDirName, [
+          d.dir('lib', [d.file('foo.dart', 'main() => "foo";')]),
+        ]);
+      }).toList();
 
       await d.dir(cachePath, [d.dir('git', fooLibs)]).validate();
     });
 
     test('deletes packages without pubspecs', () async {
       final gitCacheDir = p.join(d.sandbox, cachePath, 'git');
-      final fooDirs =
-          listDir(
-            gitCacheDir,
-          ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
+      final fooDirs = listDir(
+        gitCacheDir,
+      ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
 
       for (var dir in fooDirs) {
         deleteEntry(p.join(dir, 'pubspec.yaml'));
@@ -106,10 +103,9 @@ void main() {
 
     test('deletes packages with invalid pubspecs', () async {
       final gitCacheDir = p.join(d.sandbox, cachePath, 'git');
-      final fooDirs =
-          listDir(
-            gitCacheDir,
-          ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
+      final fooDirs = listDir(
+        gitCacheDir,
+      ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
 
       for (var dir in fooDirs) {
         writeTextFile(p.join(dir, 'pubspec.yaml'), '{');
@@ -164,10 +160,9 @@ void main() {
     test('reinstalls previously cached git packages', () async {
       // Find the cached foo packages for each revision.
       final gitCacheDir = p.join(d.sandbox, cachePath, 'git');
-      final fooDirs =
-          listDir(
-            gitCacheDir,
-          ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
+      final fooDirs = listDir(
+        gitCacheDir,
+      ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
 
       // Delete "sub.dart" from them.
       for (var dir in fooDirs) {
@@ -184,25 +179,23 @@ void main() {
       );
 
       // The missing libraries should have been replaced.
-      final fooLibs =
-          fooDirs.map((dir) {
-            final fooDirName = p.basename(dir);
-            return d.dir(fooDirName, [
-              d.dir('subdir', [
-                d.dir('lib', [d.file('sub.dart', 'main() => "sub";')]),
-              ]),
-            ]);
-          }).toList();
+      final fooLibs = fooDirs.map((dir) {
+        final fooDirName = p.basename(dir);
+        return d.dir(fooDirName, [
+          d.dir('subdir', [
+            d.dir('lib', [d.file('sub.dart', 'main() => "sub";')]),
+          ]),
+        ]);
+      }).toList();
 
       await d.dir(cachePath, [d.dir('git', fooLibs)]).validate();
     });
 
     test('deletes packages without pubspecs', () async {
       final gitCacheDir = p.join(d.sandbox, cachePath, 'git');
-      final fooDirs =
-          listDir(
-            gitCacheDir,
-          ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
+      final fooDirs = listDir(
+        gitCacheDir,
+      ).where((dir) => p.basename(dir).startsWith('foo-')).toList();
 
       for (var dir in fooDirs) {
         deleteEntry(p.join(dir, 'subdir', 'pubspec.yaml'));

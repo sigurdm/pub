@@ -24,7 +24,8 @@ class UnpackCommand extends PubCommand {
   String get name => 'unpack';
 
   @override
-  String get description => '''
+  String get description =>
+      '''
 Downloads a package and unpacks it in place.
 
 For example:

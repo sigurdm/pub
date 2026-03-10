@@ -286,12 +286,9 @@ class _ErrorGroupStream<T> extends Stream<T> {
     : _controller = StreamController(sync: true) {
     // Use old-style asBroadcastStream behavior - cancel source _subscription
     // the first time the stream has no listeners.
-    _stream =
-        inner.isBroadcast
-            ? _controller.stream.asBroadcastStream(
-              onCancel: (sub) => sub.cancel(),
-            )
-            : _controller.stream;
+    _stream = inner.isBroadcast
+        ? _controller.stream.asBroadcastStream(onCancel: (sub) => sub.cancel())
+        : _controller.stream;
     _subscription = inner.listen(
       _controller.add,
       onError: _group._signalError,

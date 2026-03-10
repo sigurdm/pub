@@ -44,10 +44,9 @@ class GitignoreValidator extends Validator {
 
       final List<String> checkedIntoGit;
       try {
-        checkedIntoGit =
-            git.splitZeroTerminated(output).map((b) {
-              return utf8.decode(b);
-            }).toList();
+        checkedIntoGit = git.splitZeroTerminated(output).map((b) {
+          return utf8.decode(b);
+        }).toList();
       } on FormatException catch (e) {
         log.fine('Failed decoding git output. Skipping validation. $e.');
         return;
@@ -96,10 +95,9 @@ class GitignoreValidator extends Validator {
                 ? p.posix.joinAll(p.split(relative))
                 : relative;
           }).toSet();
-      final ignoredFilesCheckedIn =
-          checkedIntoGit
-              .where((file) => !unignoredByGitignore.contains(file))
-              .toList();
+      final ignoredFilesCheckedIn = checkedIntoGit
+          .where((file) => !unignoredByGitignore.contains(file))
+          .toList();
 
       if (ignoredFilesCheckedIn.isNotEmpty) {
         warnings.add('''

@@ -45,8 +45,8 @@ class _AuthenticatedClient extends http.BaseClient {
     // credentials of the first party.
     if (_credential != null &&
         _credential.canAuthenticate(request.url.toString())) {
-      request.headers[HttpHeaders.authorizationHeader] =
-          await _credential.getAuthorizationHeaderValue();
+      request.headers[HttpHeaders.authorizationHeader] = await _credential
+          .getAuthorizationHeaderValue();
     }
 
     final response = await _inner.send(request);
@@ -69,14 +69,13 @@ class _AuthenticatedClient extends http.BaseClient {
     if (response.headers.containsKey(HttpHeaders.wwwAuthenticateHeader)) {
       try {
         final header = response.headers[HttpHeaders.wwwAuthenticateHeader]!;
-        final challenge = AuthenticationChallenge.parseHeader(
-          header,
-        ).firstWhereOrNull(
-          (challenge) =>
-              challenge.scheme == 'bearer' &&
-              challenge.parameters['realm'] == 'pub' &&
-              challenge.parameters['message'] != null,
-        );
+        final challenge = AuthenticationChallenge.parseHeader(header)
+            .firstWhereOrNull(
+              (challenge) =>
+                  challenge.scheme == 'bearer' &&
+                  challenge.parameters['realm'] == 'pub' &&
+                  challenge.parameters['message'] != null,
+            );
         if (challenge != null) {
           serverMessage = challenge.parameters['message'];
         }

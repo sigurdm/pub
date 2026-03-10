@@ -13,7 +13,8 @@ class TokenCommand extends PubCommand {
   @override
   String get name => 'token';
   @override
-  String get description => '''
+  String get description =>
+      '''
 Manage authentication tokens for hosted pub repositories.
 
 The tokens will be used for authorizing both when retrieving dependencies and

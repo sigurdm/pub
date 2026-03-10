@@ -73,7 +73,8 @@ class Pubspec extends PubspecBase {
         '`workspace` and `resolution` requires at least language version '
         '${LanguageVersion.firstVersionWithWorkspaces}',
         workspaceNode.span,
-        hint: '''
+        hint:
+            '''
 Consider updating the SDK constraint to:
 
 environment:
@@ -112,7 +113,8 @@ environment:
         '`workspace` and `resolution` requires at least language version '
         '${LanguageVersion.firstVersionWithWorkspaces}',
         resolutionNode.span,
-        hint: '''
+        hint:
+            '''
 Consider updating the SDK constraint to:
 
 environment:
@@ -227,8 +229,9 @@ environment:
     }
     final dartConstraint = SdkConstraint.interpretDartSdkConstraint(
       originalDartSdkConstraint,
-      defaultUpperBoundConstraint:
-          _includeDefaultSdkConstraint ? _defaultUpperBoundSdkConstraint : null,
+      defaultUpperBoundConstraint: _includeDefaultSdkConstraint
+          ? _defaultUpperBoundSdkConstraint
+          : null,
     );
     final constraints = {'dart': dartConstraint};
 
@@ -248,14 +251,13 @@ environment:
           _packageName,
           _FileType.pubspec,
         );
-        constraints[name] =
-            name == 'flutter'
-                ? SdkConstraint.interpretFlutterSdkConstraint(
-                  constraint,
-                  isRoot: _containingDescription is ResolvedRootDescription,
-                  languageVersion: dartConstraint.languageVersion,
-                )
-                : SdkConstraint(constraint);
+        constraints[name] = name == 'flutter'
+            ? SdkConstraint.interpretFlutterSdkConstraint(
+                constraint,
+                isRoot: _containingDescription is ResolvedRootDescription,
+                languageVersion: dartConstraint.languageVersion,
+              )
+            : SdkConstraint(constraint);
       });
     }
     return constraints;
@@ -295,8 +297,8 @@ environment:
     }
     final overridesFileContents =
         allowOverridesFile && fileExists(overridesPath)
-            ? readTextFile(overridesPath)
-            : null;
+        ? readTextFile(overridesPath)
+        : null;
 
     return Pubspec.parse(
       readTextFile(pubspecPath),
@@ -341,18 +343,15 @@ environment:
     this.workspace = const <String>[],
     this.dependencyOverridesFromOverridesFile = false,
     this.resolution = Resolution.none,
-  }) : _dependencies =
-           dependencies == null
-               ? null
-               : {for (final d in dependencies) d.name: d},
-       _devDependencies =
-           devDependencies == null
-               ? null
-               : {for (final d in devDependencies) d.name: d},
-       _dependencyOverrides =
-           dependencyOverrides == null
-               ? null
-               : {for (final d in dependencyOverrides) d.name: d},
+  }) : _dependencies = dependencies == null
+           ? null
+           : {for (final d in dependencies) d.name: d},
+       _devDependencies = devDependencies == null
+           ? null
+           : {for (final d in devDependencies) d.name: d},
+       _dependencyOverrides = dependencyOverrides == null
+           ? null
+           : {for (final d in dependencyOverrides) d.name: d},
        _givenSdkConstraints =
            sdkConstraints ??
            UnmodifiableMapView({'dart': SdkConstraint(VersionConstraint.any)}),
@@ -625,10 +624,9 @@ Map<String, PackageRange> _parseDependencies(
         packageName,
         fileType,
       );
-      final otherEntries =
-          specNode.nodes.entries
-              .where((entry) => (entry.key as YamlNode).value != 'version')
-              .toList();
+      final otherEntries = specNode.nodes.entries
+          .where((entry) => (entry.key as YamlNode).value != 'version')
+          .toList();
       if (otherEntries.length > 1) {
         _error('A dependency may only have one source.', specNode.span);
       } else if (otherEntries.isEmpty) {

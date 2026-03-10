@@ -62,16 +62,15 @@ void main() {
     await runPub(args: ['get']);
 
     final fooPathInCache = p.join(d.sandbox, cachePath, 'git');
-    final revisionCacheDirs =
-        Directory(fooPathInCache)
-            .listSync()
-            .whereType<Directory>()
-            .where(
-              (dir) =>
-                  p.basename(dir.path).startsWith('foo-') &&
-                  p.basename(p.dirname(dir.path)) == 'git',
-            )
-            .toList();
+    final revisionCacheDirs = Directory(fooPathInCache)
+        .listSync()
+        .whereType<Directory>()
+        .where(
+          (dir) =>
+              p.basename(dir.path).startsWith('foo-') &&
+              p.basename(p.dirname(dir.path)) == 'git',
+        )
+        .toList();
 
     expect(revisionCacheDirs, hasLength(1));
     final revisionCacheDir = revisionCacheDirs.first.path;
@@ -141,12 +140,11 @@ exit 1
       // Also verify that even if we set lfsurl, git doesn't care if lfs is
       // missing for a regular repo.
       final fooPathInCache = p.join(d.sandbox, cachePath, 'git');
-      final revisionCacheDir =
-          Directory(fooPathInCache)
-              .listSync()
-              .whereType<Directory>()
-              .firstWhere((dir) => p.basename(dir.path).startsWith('foo-'))
-              .path;
+      final revisionCacheDir = Directory(fooPathInCache)
+          .listSync()
+          .whereType<Directory>()
+          .firstWhere((dir) => p.basename(dir.path).startsWith('foo-'))
+          .path;
 
       final result = Process.runSync('git', [
         'config',

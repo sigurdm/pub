@@ -54,10 +54,9 @@ void main() async {
     await pubGet(workingDirectory: p.join(d.sandbox, 'app_git'));
     await pubGet(workingDirectory: p.join(d.sandbox, 'app_path'));
 
-    final markingFiles =
-        Directory(
-          p.join(d.sandbox, cachePath, 'active_roots'),
-        ).listSync(recursive: true).whereType<File>().toList();
+    final markingFiles = Directory(
+      p.join(d.sandbox, cachePath, 'active_roots'),
+    ).listSync(recursive: true).whereType<File>().toList();
 
     expect(markingFiles, hasLength(3));
 

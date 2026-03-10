@@ -28,8 +28,8 @@ class DependencyOverrideValidator extends Validator {
         if (transitiveNonDevDependencies.contains(override)) {
           final overridesFile =
               workspacePackage.pubspec.dependencyOverridesFromOverridesFile
-                  ? workspacePackage.pubspecOverridesPath
-                  : workspacePackage.pubspecPath;
+              ? workspacePackage.pubspecOverridesPath
+              : workspacePackage.pubspecPath;
           hints.add('''
 Non-dev dependencies are overridden in $overridesFile.
 

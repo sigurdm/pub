@@ -276,14 +276,13 @@ String _credentialsFileContent(
   String accessToken, {
   String? refreshToken,
   DateTime? expiration,
-}) =>
-    Credentials(
-      accessToken,
-      refreshToken: refreshToken,
-      tokenEndpoint: Uri.parse(server.url).resolve('/token'),
-      scopes: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
-      expiration: expiration,
-    ).toJson();
+}) => Credentials(
+  accessToken,
+  refreshToken: refreshToken,
+  tokenEndpoint: Uri.parse(server.url).resolve('/token'),
+  scopes: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+  expiration: expiration,
+).toJson();
 
 /// Describes the file in the system cache that contains credentials for
 /// third party hosted pub servers.
@@ -357,8 +356,9 @@ PackageConfigEntry packageConfigEntry({
     name: name,
     rootUri: rootUri,
     packageUri: Uri(path: 'lib/'),
-    languageVersion:
-        languageVersion != null ? LanguageVersion.parse(languageVersion) : null,
+    languageVersion: languageVersion != null
+        ? LanguageVersion.parse(languageVersion)
+        : null,
   );
 }
 

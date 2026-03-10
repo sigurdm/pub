@@ -12,10 +12,9 @@ import '../../test_pub.dart';
 
 void main() {
   test('Warns about discontinued dependencies', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.2.3', deps: {'transitive': 'any'})
-          ..serve('transitive', '1.0.0');
+    final server = await servePackages()
+      ..serve('foo', '1.2.3', deps: {'transitive': 'any'})
+      ..serve('transitive', '1.0.0');
     await d.appDir(dependencies: {'foo': '1.2.3'}).create();
     await pubGet();
 
@@ -46,10 +45,9 @@ No dependencies changed.
   });
 
   test('Warns about discontinued dev_dependencies', () async {
-    final server =
-        await servePackages()
-          ..serve('foo', '1.2.3', deps: {'transitive': 'any'})
-          ..serve('transitive', '1.0.0');
+    final server = await servePackages()
+      ..serve('foo', '1.2.3', deps: {'transitive': 'any'})
+      ..serve('transitive', '1.0.0');
 
     await d.dir(appPath, [
       d.file('pubspec.yaml', '''

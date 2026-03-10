@@ -38,8 +38,9 @@ class RelativeVersionNumberingValidator extends Validator {
 
     final currentVersion = package.pubspec.version;
 
-    final latestVersion =
-        existingVersions.isEmpty ? null : existingVersions.last.version;
+    final latestVersion = existingVersions.isEmpty
+        ? null
+        : existingVersions.last.version;
     if (latestVersion != null && latestVersion > currentVersion) {
       hints.add('''
 The latest published version is $latestVersion.
@@ -62,7 +63,8 @@ Your version $currentVersion is earlier than that.''');
         noPrerelease != previousVersion.nextMinor &&
         noPrerelease != previousVersion.nextPatch &&
         currentVersion.withoutBuild() != previousVersion) {
-      final hint = '''
+      final hint =
+          '''
 The previous version is $previousVersion.
 
 It seems you are not publishing an incremental update.
@@ -72,13 +74,15 @@ Consider one of:
       final String suggestion;
 
       if (previousVersion.major == 0) {
-        suggestion = '''
+        suggestion =
+            '''
 * ${previousVersion.nextMajor} for a first major release.
 * ${previousVersion.nextBreaking} for a breaking release.
 * ${previousVersion.nextPatch} for a minor release.
 ''';
       } else {
-        suggestion = '''
+        suggestion =
+            '''
 * ${previousVersion.nextBreaking} for a breaking release.
 * ${previousVersion.nextMinor} for a minor release.
 * ${previousVersion.nextPatch} for a patch release.''';
