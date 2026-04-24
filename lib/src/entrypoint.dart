@@ -1117,10 +1117,22 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
             );
             packageConfigStat = tryStatFile(potentialPackageConfigPath2);
             if (packageConfigStat == null) {
-              log.fine(
-                '`$potentialWorkspaceRefPath` points to non-existing '
-                '`$potentialPackageConfigPath2`',
+              // If this is a trivial workspace (a single package project),
+              // the workspace root points to the package itself. In that case,
+              // referencing "workspace_ref" in the log message when the
+              // package config is missing is more confusing than helpful,
+              // as it implies multi-package workspace resolution is involved.
+              // Thus, we only log this if the resolved root is not the same
+              // as the directory where we found the pubspec.yaml.
+              final resolvedRootDir = p.dirname(
+                p.dirname(potentialPackageConfigPath2),
               );
+              if (resolvedRootDir != parent) {
+                log.fine(
+                  '`$potentialWorkspaceRefPath` points to non-existing '
+                  '`$potentialPackageConfigPath2`',
+                );
+              }
               return null;
             } else {
               packageConfigPath = potentialPackageConfigPath2;

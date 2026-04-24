@@ -61,7 +61,50 @@ void testEnsurePubspecResolved() {
         ).deleteSync();
 
         await _implicitPubGet(
-          '`.dart_tool/pub/workspace_ref.json` points to non-existing `.dart_tool/package_config.json`',
+          'Found no .dart_tool/package_config.json - no existing resolution.',
+        );
+      });
+
+      test("workspace_ref.json is not valid json", () async {
+        await d.dir(appPath, [
+          d.dir('.dart_tool', [
+            d.dir('pub', [
+              d.file('workspace_ref.json', 'invalid json'),
+            ]),
+          ]),
+        ]).create();
+
+        await _implicitPubGet(
+          '`.dart_tool/pub/workspace_ref.json` not valid json',
+        );
+      });
+
+      test("workspace_ref.json is missing workspaceRoot property", () async {
+        await d.dir(appPath, [
+          d.dir('.dart_tool', [
+            d.dir('pub', [
+              d.file('workspace_ref.json', '{}'),
+            ]),
+          ]),
+        ]).create();
+
+        await _implicitPubGet(
+          '`.dart_tool/pub/workspace_ref.json` is missing "workspaceRoot" property',
+        );
+      });
+
+      test("workspace_ref.json points to non-existing file in non-trivial case", () async {
+        await d.dir(appPath, [
+          d.pubspec({'name': 'myapp'}),
+          d.dir('.dart_tool', [
+            d.dir('pub', [
+              d.file('workspace_ref.json', '{"workspaceRoot": "../../.."}'),
+            ]),
+          ]),
+        ]).create();
+
+        await _implicitPubGet(
+          '`.dart_tool/pub/workspace_ref.json` points to non-existing',
         );
       });
 
