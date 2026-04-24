@@ -68,6 +68,26 @@ void main() {
       ]).validate();
     });
 
+    test('workspace_ref.json file is created for trivial workspace', () async {
+      final server = await servePackages();
+      server.serve('foo', '1.2.3', contents: [d.dir('lib', [])]);
+
+      await d.dir(appPath, [
+        d.appPubspec(dependencies: {'foo': '1.2.3'}),
+        d.dir('lib'),
+      ]).create();
+
+      await pubCommand(command);
+
+      await d.dir(appPath, [
+        d.dir('.dart_tool', [
+          d.dir('pub', [
+            d.file('workspace_ref.json', contains('"workspaceRoot": "../.."')),
+          ]),
+        ]),
+      ]).validate();
+    });
+
     test(
       'package_config.json uses relative paths if PUB_CACHE is relative',
       () async {

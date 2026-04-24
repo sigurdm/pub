@@ -438,20 +438,18 @@ See $workspacesDocUrl for more information.''',
     );
     writeTextFileIfDifferent(packageGraphPath, await _packageGraphFile(cache));
 
-    if (workspaceRoot.workspaceChildren.isNotEmpty) {
-      for (final package in workspaceRoot.transitiveWorkspace) {
-        final workspaceRefDir = p.join(package.dir, '.dart_tool', 'pub');
-        final workspaceRefPath = p.join(workspaceRefDir, 'workspace_ref.json');
-        ensureDir(workspaceRefDir);
-        final relativeRootPath = p.relative(
-          workspaceRoot.dir,
-          from: workspaceRefDir,
-        );
-        final workspaceRef = const JsonEncoder.withIndent(
-          '  ',
-        ).convert({'workspaceRoot': relativeRootPath});
-        writeTextFileIfDifferent(workspaceRefPath, '$workspaceRef\n');
-      }
+    for (final package in workspaceRoot.transitiveWorkspace) {
+      final workspaceRefDir = p.join(package.dir, '.dart_tool', 'pub');
+      final workspaceRefPath = p.join(workspaceRefDir, 'workspace_ref.json');
+      ensureDir(workspaceRefDir);
+      final relativeRootPath = p.relative(
+        workspaceRoot.dir,
+        from: workspaceRefDir,
+      );
+      final workspaceRef = const JsonEncoder.withIndent(
+        '  ',
+      ).convert({'workspaceRoot': relativeRootPath});
+      writeTextFileIfDifferent(workspaceRefPath, '$workspaceRef\n');
     }
     if (lockFile.packages.values.any((id) => id.source is CachedSource)) {
       cache.markRootActive(packageConfigPath);

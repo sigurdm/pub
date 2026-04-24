@@ -46,9 +46,24 @@ void testEnsurePubspecResolved() {
         File(
           p.join(d.sandbox, 'myapp/.dart_tool/package_config.json'),
         ).deleteSync();
+        File(
+          p.join(d.sandbox, 'myapp/.dart_tool/pub/workspace_ref.json'),
+        ).deleteSync();
 
         await _implicitPubGet(
           '`./pubspec.yaml` exists without corresponding `./pubspec.yaml` or `.dart_tool/pub/workspace_ref.json`.',
+        );
+      });
+
+      test(
+        "there's no package_config.json but workspace_ref is there",
+        () async {
+        File(
+          p.join(d.sandbox, 'myapp/.dart_tool/package_config.json'),
+        ).deleteSync();
+
+        await _implicitPubGet(
+          '`./.dart_tool/pub/workspace_ref.json` points to non-existing `./.dart_tool/package_config.json`',
         );
       });
 
