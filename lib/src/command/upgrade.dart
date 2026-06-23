@@ -189,6 +189,7 @@ Consider using the Dart 2.19 sdk to migrate to null safety.''');
       _validateUpgradeTargetEntrypoints(
         validatePlainTargets: argResults.flag('unlock-transitive'),
       );
+      _validateUpgradeTargetConstraintsOverlap();
     }
 
     if (_upgradeMajorVersions) {
@@ -616,6 +617,41 @@ be direct 'dependencies' or 'dev_dependencies', following packages are not:
         'latest versions of your dependencies.',
       );
     }
+  }
+
+  void _validateUpgradeTargetConstraintsOverlap() {
+    if (_upgradeMajorVersions) return;
+
+    for (final target in _upgradeTargets) {
+      if (target.kind != _UpgradeTargetKind.constraint) continue;
+      final targetConstraint = target.constraint!;
+
+      final declaredDep = _getDeclaredDependency(target.name);
+      if (declaredDep == null) continue;
+
+      final declaredConstraint = declaredDep.constraint;
+      if (!declaredConstraint.allowsAny(targetConstraint)) {
+        dataError(
+          'The constraint `$targetConstraint` for package `${target.name}` does not overlap with the '
+          'declared constraint `$declaredConstraint` in `pubspec.yaml`.\n'
+          'To upgrade to a version outside the current constraint, run '
+          '`$topLevelProgram pub upgrade --major-versions ${target.name}`.',
+        );
+      }
+    }
+  }
+
+  PackageRange? _getDeclaredDependency(String packageName) {
+    final override = entrypoint.workspaceRoot.allOverridesInWorkspace[packageName];
+    if (override != null) return override;
+
+    for (final workspacePackage in entrypoint.workspaceRoot.transitiveWorkspace) {
+      final dependency = workspacePackage.dependencies[packageName];
+      if (dependency != null) return dependency;
+      final devDependency = workspacePackage.devDependencies[packageName];
+      if (devDependency != null) return devDependency;
+    }
+    return null;
   }
 }
 
