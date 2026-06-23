@@ -626,32 +626,53 @@ be direct 'dependencies' or 'dev_dependencies', following packages are not:
       if (target.kind != _UpgradeTargetKind.constraint) continue;
       final targetConstraint = target.constraint!;
 
-      final declaredDep = _getDeclaredDependency(target.name);
-      if (declaredDep == null) continue;
+      // Overrides apply to the entire workspace and take precedence.
+      final override = entrypoint.workspaceRoot.allOverridesInWorkspace[target.name];
+      if (override != null) {
+        final declaredConstraint = override.constraint;
+        if (!declaredConstraint.allowsAny(targetConstraint)) {
+          _reportOverlapError(target.name, targetConstraint, declaredConstraint, isOverride: true);
+        }
+        continue;
+      }
 
-      final declaredConstraint = declaredDep.constraint;
-      if (!declaredConstraint.allowsAny(targetConstraint)) {
-        dataError(
-          'The constraint `$targetConstraint` for package `${target.name}` does not overlap with the '
-          'declared constraint `$declaredConstraint` in `pubspec.yaml`.\n'
-          'To upgrade to a version outside the current constraint, run '
-          '`$topLevelProgram pub upgrade --major-versions ${target.name}`.',
-        );
+      // Check all workspace packages that depend on this package.
+      for (final workspacePackage in entrypoint.workspaceRoot.transitiveWorkspace) {
+        final dep = workspacePackage.dependencies[target.name] ??
+            workspacePackage.devDependencies[target.name];
+        if (dep != null) {
+          final declaredConstraint = dep.constraint;
+          if (!declaredConstraint.allowsAny(targetConstraint)) {
+            _reportOverlapError(
+              target.name,
+              targetConstraint,
+              declaredConstraint,
+              packageName: workspacePackage.name,
+            );
+          }
+        }
       }
     }
   }
 
-  PackageRange? _getDeclaredDependency(String packageName) {
-    final override = entrypoint.workspaceRoot.allOverridesInWorkspace[packageName];
-    if (override != null) return override;
-
-    for (final workspacePackage in entrypoint.workspaceRoot.transitiveWorkspace) {
-      final dependency = workspacePackage.dependencies[packageName];
-      if (dependency != null) return dependency;
-      final devDependency = workspacePackage.devDependencies[packageName];
-      if (devDependency != null) return devDependency;
-    }
-    return null;
+  void _reportOverlapError(
+    String name,
+    VersionConstraint targetConstraint,
+    VersionConstraint declaredConstraint, {
+    bool isOverride = false,
+    String? packageName,
+  }) {
+    final context = isOverride
+        ? 'dependency override'
+        : (packageName != null && packageName != entrypoint.workspaceRoot.name)
+            ? 'constraint in workspace package `$packageName`'
+            : 'constraint in `pubspec.yaml`';
+    dataError(
+      'The constraint `$targetConstraint` for package `$name` does not overlap with the '
+      'declared $context (`$declaredConstraint`).\n'
+      'To upgrade to a version outside the current constraint, run '
+      '`$topLevelProgram pub upgrade --major-versions $name`.',
+    );
   }
 }
 
