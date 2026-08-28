@@ -501,10 +501,13 @@ class PackageVersionIndex {
   /// (`mask & nonPrereleaseMask`).
   final Bitmask nonPrereleaseMask;
 
+  final List<Version> _versionNumbers;
+
   final _maskCache = <VersionConstraint, Bitmask>{};
 
   PackageVersionIndex(this.versions)
-    : allVersionsMask = Bitmask.all(versions.length),
+    : _versionNumbers = [for (final id in versions) id.version],
+      allVersionsMask = Bitmask.all(versions.length),
       nonPrereleaseMask = Bitmask.fromPredicate(
         versions.length,
         (i) => !versions[i].version.isPreRelease,
@@ -528,9 +531,9 @@ class PackageVersionIndex {
   Bitmask _computeMaskFor(VersionConstraint constraint) {
     if (constraint is Version) {
       // Find the single version matching the exact target.
-      final targetIndex = _lowerBound(constraint);
+      final targetIndex = lowerBound(_versionNumbers, constraint);
       if (targetIndex < versions.length &&
-          versions[targetIndex].version == constraint) {
+          _versionNumbers[targetIndex] == constraint) {
         return Bitmask.single(versions.length, targetIndex);
       } else {
         return Bitmask.empty(versions.length);
@@ -540,17 +543,18 @@ class PackageVersionIndex {
       // bounds.
       final min = constraint.min;
       final max = constraint.max;
-      var minIndex = min == null ? 0 : _lowerBound(min);
+      var minIndex = min == null ? 0 : lowerBound(_versionNumbers, min);
       if (min != null && !constraint.includeMin) {
         // If the exact minimum is excluded, skip it if present.
-        if (minIndex < versions.length && versions[minIndex].version == min) {
+        if (minIndex < versions.length && _versionNumbers[minIndex] == min) {
           minIndex++;
         }
       }
-      var maxIndex = max == null ? versions.length : _lowerBound(max);
+      var maxIndex =
+          max == null ? versions.length : lowerBound(_versionNumbers, max);
       if (max != null && constraint.includeMax) {
         // If the exact maximum is included, include it if present.
-        if (maxIndex < versions.length && versions[maxIndex].version == max) {
+        if (maxIndex < versions.length && _versionNumbers[maxIndex] == max) {
           maxIndex++;
         }
       }
@@ -566,27 +570,8 @@ class PackageVersionIndex {
       // Fallback for custom or arbitrary constraint implementations.
       return Bitmask.fromPredicate(
         versions.length,
-        (i) => constraint.allows(versions[i].version),
+        (i) => constraint.allows(_versionNumbers[i]),
       );
     }
-  }
-
-  /// Binary search finding the index of the first version in [versions]
-  /// such that `version >= target`.
-  ///
-  /// Returns `versions.length` if all versions are strictly less than [target].
-  int _lowerBound(Version target) {
-    var min = 0;
-    var max = versions.length;
-    while (min < max) {
-      final mid = min + ((max - min) >> 1);
-      final element = versions[mid].version;
-      if (element.compareTo(target) < 0) {
-        min = mid + 1;
-      } else {
-        max = mid;
-      }
-    }
-    return min;
   }
 }
