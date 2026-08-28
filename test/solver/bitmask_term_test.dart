@@ -338,7 +338,8 @@ void main() {
       ];
       final index = indexFor(hostedRef, versions);
 
-      // ^1.0.0 allows 1.0.0, 1.5.0-dev, 1.5.0, but excludes 2.0.0-alpha and 2.0.0
+      // ^1.0.0 allows 1.0.0, 1.5.0-dev, 1.5.0, but excludes 2.0.0-alpha
+      // and 2.0.0.
       final mask = index.maskFor(VersionConstraint.parse('^1.0.0'));
       expect(mask.allows(0), isTrue); // 1.0.0
       expect(mask.allows(1), isTrue); // 1.5.0-dev (allowed by pub_semver)
