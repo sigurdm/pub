@@ -5,6 +5,8 @@
 import 'package:pub_semver/pub_semver.dart';
 
 import '../package_name.dart';
+import 'bitmask.dart';
+import 'package_lister.dart';
 import 'set_relation.dart';
 
 /// A statement about a package which is true or false for a given selection of
@@ -33,16 +35,19 @@ class Term {
   /// Returns whether `this` satisfies [other].
   ///
   /// That is, whether `this` being true means that [other] must also be true.
-  bool satisfies(Term other) =>
+  bool satisfies(Term other, [PackageVersionIndex? index]) =>
       package.name == other.package.name &&
-      relation(other) == SetRelation.subset;
+      relation(other, index) == SetRelation.subset;
 
   /// Returns the relationship between the package versions allowed by `this`
   /// and by [other].
   ///
+  /// If [index] is provided, uses discrete [Bitmask] operations over the
+  /// package's available versions for $O(1)$ evaluation.
+  ///
   /// Throws an [ArgumentError] if [other] doesn't refer to a package with the
   /// same name as [package].
-  SetRelation relation(Term other) {
+  SetRelation relation(Term other, [PackageVersionIndex? index]) {
     if (package.name != other.package.name) {
       throw ArgumentError.value(
         other,
@@ -56,6 +61,14 @@ class Term {
       if (isPositive) {
         // foo from hosted is disjoint with foo from git
         if (!_compatiblePackage(other.package)) return SetRelation.disjoint;
+
+        if (index != null) {
+          final m1 = index.maskFor(constraint);
+          final m2 = index.maskFor(otherConstraint);
+          if (m2.allowsAll(m1)) return SetRelation.subset;
+          if (!m1.allowsAny(m2)) return SetRelation.disjoint;
+          return SetRelation.overlapping;
+        }
 
         // foo ^1.5.0 is a subset of foo ^1.0.0
         if (otherConstraint.allowsAll(constraint)) return SetRelation.subset;
@@ -71,6 +84,13 @@ class Term {
         // not foo from hosted is a superset foo from git
         if (!_compatiblePackage(other.package)) return SetRelation.overlapping;
 
+        if (index != null) {
+          final m1 = index.maskFor(constraint);
+          final m2 = index.maskFor(otherConstraint);
+          if (m1.allowsAll(m2)) return SetRelation.disjoint;
+          return SetRelation.overlapping;
+        }
+
         // not foo ^1.0.0 is disjoint with foo ^1.5.0
         if (constraint.allowsAll(otherConstraint)) {
           return SetRelation.disjoint;
@@ -85,6 +105,14 @@ class Term {
         // foo from hosted is a subset of not foo from git
         if (!_compatiblePackage(other.package)) return SetRelation.subset;
 
+        if (index != null) {
+          final m1 = index.maskFor(constraint);
+          final m2 = index.maskFor(otherConstraint);
+          if (!m2.allowsAny(m1)) return SetRelation.subset;
+          if (m2.allowsAll(m1)) return SetRelation.disjoint;
+          return SetRelation.overlapping;
+        }
+
         // foo ^2.0.0 is a subset of not foo ^1.0.0
         if (!otherConstraint.allowsAny(constraint)) return SetRelation.subset;
 
@@ -96,6 +124,13 @@ class Term {
       } else {
         // not foo from hosted overlaps not foo from git
         if (!_compatiblePackage(other.package)) return SetRelation.overlapping;
+
+        if (index != null) {
+          final m1 = index.maskFor(constraint);
+          final m2 = index.maskFor(otherConstraint);
+          if (m1.allowsAll(m2)) return SetRelation.subset;
+          return SetRelation.overlapping;
+        }
 
         // not foo ^1.0.0 is a subset of not foo ^1.5.0
         if (constraint.allowsAll(otherConstraint)) return SetRelation.subset;

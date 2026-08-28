@@ -136,10 +136,17 @@ class PackageLister {
        sdkOverrides = sdkOverrides ?? {},
        _rootPackage = package;
 
-  Future<_PackageVersionIndex> get _versionIndex => _versionIndexMemo.runOnce(
-    () async => _PackageVersionIndex(await _versions),
-  );
-  final _versionIndexMemo = AsyncMemoizer<_PackageVersionIndex>();
+  Future<PackageVersionIndex> get _versionIndex =>
+      _versionIndexMemo.runOnce(() async {
+        final index = PackageVersionIndex(await _versions);
+        _cachedVersionIndex = index;
+        return index;
+      });
+  final _versionIndexMemo = AsyncMemoizer<PackageVersionIndex>();
+  PackageVersionIndex? _cachedVersionIndex;
+
+  /// The cached version index if versions have already been fetched, or `null`.
+  PackageVersionIndex? get cachedVersionIndex => _cachedVersionIndex;
 
   /// Returns the number of versions of this package that match [constraint].
   Future<int> countVersions(VersionConstraint constraint) async {
@@ -480,7 +487,7 @@ class PackageLister {
 ///
 /// This enables $O(1)$ version counting, constraint intersections, and version
 /// selection in [PackageLister.countVersions] and [PackageLister.bestVersion].
-class _PackageVersionIndex {
+class PackageVersionIndex {
   /// The sorted list of all available versions for this package.
   final List<PackageId> versions;
 
@@ -494,7 +501,9 @@ class _PackageVersionIndex {
   /// (`mask & nonPrereleaseMask`).
   final Bitmask nonPrereleaseMask;
 
-  _PackageVersionIndex(this.versions)
+  final _maskCache = <VersionConstraint, Bitmask>{};
+
+  PackageVersionIndex(this.versions)
     : allVersionsMask = Bitmask.all(versions.length),
       nonPrereleaseMask = Bitmask.fromPredicate(
         versions.length,
@@ -509,7 +518,14 @@ class _PackageVersionIndex {
   Bitmask maskFor(VersionConstraint constraint) {
     if (constraint.isEmpty) return Bitmask.empty(versions.length);
     if (constraint.isAny) return allVersionsMask;
+    final cached = _maskCache[constraint];
+    if (cached != null) return cached;
+    final mask = _computeMaskFor(constraint);
+    _maskCache[constraint] = mask;
+    return mask;
+  }
 
+  Bitmask _computeMaskFor(VersionConstraint constraint) {
     if (constraint is Version) {
       // Find the single version matching the exact target.
       final targetIndex = _lowerBound(constraint);

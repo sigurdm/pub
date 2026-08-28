@@ -4,9 +4,13 @@
 
 import '../package_name.dart';
 import 'assignment.dart';
+import 'bitmask.dart';
 import 'incompatibility.dart';
+import 'package_lister.dart';
 import 'set_relation.dart';
 import 'term.dart';
+
+typedef VersionIndexProvider = PackageVersionIndex? Function(PackageRef ref);
 
 /// A list of [Assignment]s that represent the solver's current best guess about
 /// what's true for the eventual set of package versions that will comprise the
@@ -22,7 +26,11 @@ class PartialSolution {
   /// member references through this map before registering or relating terms.
   final Map<String, PackageRef> _rootRefs;
 
-  PartialSolution([this._rootRefs = const {}]);
+  /// Optional provider for [PackageVersionIndex] to accelerate relation checks
+  /// with discrete [Bitmask] operations.
+  final VersionIndexProvider? _versionIndexProvider;
+
+  PartialSolution([this._rootRefs = const {}, this._versionIndexProvider]);
 
   /// The assignments that have been made so far, in the order they were
   /// assigned.
@@ -151,7 +159,7 @@ class PartialSolution {
   ///
   /// Throws a [StateError] if [term] isn't satisfied by `this`.
   Assignment satisfier(Term term) {
-    final prefix = PartialSolution(_rootRefs);
+    final prefix = PartialSolution(_rootRefs, _versionIndexProvider);
     for (var assignment in _assignments) {
       if (assignment.package.name != term.package.name) continue;
 
@@ -171,9 +179,12 @@ class PartialSolution {
   /// Returns the relationship between the package versions allowed by all
   /// assignments in `this` and those allowed by [term].
   SetRelation relation(Term term) {
-    term = Term(canonicalize(term.package), term.isPositive);
+    final canonicalRange = canonicalize(term.package);
+    final ref = canonicalRange.toRef();
+    final index = _versionIndexProvider?.call(ref);
+    term = Term(canonicalRange, term.isPositive);
     final positive = _positive[term.package.name];
-    if (positive != null) return positive.relation(term);
+    if (positive != null) return positive.relation(term, index);
 
     // If there are no assignments related to [term], that means the
     // assignments allow any version of any package, which is a superset of
@@ -184,7 +195,7 @@ class PartialSolution {
     final negative = byRef[term.package.toRef()];
     if (negative == null) return SetRelation.overlapping;
 
-    return negative.relation(term);
+    return negative.relation(term, index);
   }
 
   /// Returns [package] with its workspace root reference, if it has one.

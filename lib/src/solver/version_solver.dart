@@ -51,7 +51,7 @@ class VersionSolver {
   late final _solution = PartialSolution({
     for (final package in _rootPackages.values)
       package.name: PackageRef.root(package),
-  });
+  }, (ref) => _packageListers[ref]?.cachedVersionIndex);
 
   /// Package listers that lazily convert package versions' dependencies into
   /// incompatibilities.
