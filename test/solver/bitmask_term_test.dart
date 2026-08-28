@@ -326,4 +326,39 @@ void main() {
       },
     );
   });
+
+  group('PackageVersionIndex edge cases', () {
+    test('matches VersionRange.allows exactly with pre-releases', () {
+      final versions = [
+        Version.parse('1.0.0'),
+        Version.parse('1.5.0-dev'),
+        Version.parse('1.5.0'),
+        Version.parse('2.0.0-alpha'),
+        Version.parse('2.0.0'),
+      ];
+      final index = indexFor(hostedRef, versions);
+
+      // ^1.0.0 allows 1.0.0, 1.5.0-dev, 1.5.0, but excludes 2.0.0-alpha and 2.0.0
+      final mask = index.maskFor(VersionConstraint.parse('^1.0.0'));
+      expect(mask.allows(0), isTrue); // 1.0.0
+      expect(mask.allows(1), isTrue); // 1.5.0-dev (allowed by pub_semver)
+      expect(mask.allows(2), isTrue); // 1.5.0
+      expect(mask.allows(3), isFalse); // 2.0.0-alpha (excluded by pub_semver!)
+      expect(mask.allows(4), isFalse); // 2.0.0
+      expect(mask.count(), 3);
+      for (var i = 0; i < versions.length; i++) {
+        expect(
+          mask.allows(i),
+          equals(VersionConstraint.parse('^1.0.0').allows(versions[i])),
+        );
+      }
+    });
+
+    test('pre-computes emptyMask and allVersionsMask', () {
+      final versions = [Version(1, 0, 0)];
+      final index = indexFor(hostedRef, versions);
+      expect(index.maskFor(VersionConstraint.empty), same(index.emptyMask));
+      expect(index.maskFor(VersionConstraint.any), same(index.allVersionsMask));
+    });
+  });
 }

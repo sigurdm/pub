@@ -23,12 +23,14 @@ class Bitmask {
 
   /// Creates an empty mask of [length] bits.
   factory Bitmask.empty(int length) {
+    RangeError.checkNotNegative(length, 'length');
     final wordCount = (length + 31) ~/ 32;
     return Bitmask._(Uint32List(wordCount), length);
   }
 
   /// Creates a mask with all [length] bits set.
   factory Bitmask.all(int length) {
+    RangeError.checkNotNegative(length, 'length');
     final wordCount = (length + 31) ~/ 32;
     final words = Uint32List(wordCount);
     for (var i = 0; i < wordCount; i++) {
@@ -40,30 +42,33 @@ class Bitmask {
 
   /// Creates a mask with a single bit at [index] set.
   factory Bitmask.single(int length, int index) {
+    RangeError.checkNotNegative(length, 'length');
     final mask = Bitmask.empty(length);
     if (index >= 0 && index < length) {
-      mask._words[index ~/ 32] |= 1 << (index % 32);
+      mask._words[index >> 5] |= 1 << (index & 31);
     }
     return mask;
   }
 
   /// Creates a mask with bits in range `[startIndex, endIndex)` set.
   factory Bitmask.range(int length, int startIndex, int endIndex) {
+    RangeError.checkNotNegative(length, 'length');
     final mask = Bitmask.empty(length);
     final clampedStart = startIndex < 0 ? 0 : startIndex;
     final clampedEnd = endIndex > length ? length : endIndex;
     for (var i = clampedStart; i < clampedEnd; i++) {
-      mask._words[i ~/ 32] |= 1 << (i % 32);
+      mask._words[i >> 5] |= 1 << (i & 31);
     }
     return mask;
   }
 
   /// Creates a mask from a predicate testing each index.
   factory Bitmask.fromPredicate(int length, bool Function(int) test) {
+    RangeError.checkNotNegative(length, 'length');
     final mask = Bitmask.empty(length);
     for (var i = 0; i < length; i++) {
       if (test(i)) {
-        mask._words[i ~/ 32] |= 1 << (i % 32);
+        mask._words[i >> 5] |= 1 << (i & 31);
       }
     }
     return mask;
@@ -161,7 +166,11 @@ class Bitmask {
 
   /// Whether `this` is a superset of [other] (i.e. `other ⊆ this`).
   bool allowsAll(Bitmask other) {
-    if (other.length != length) return false;
+    if (other.length != length) {
+      throw ArgumentError(
+        'Mismatched Bitmask lengths: $length vs ${other.length}',
+      );
+    }
     for (var i = 0; i < _words.length; i++) {
       if ((_words[i] & other._words[i]) != other._words[i]) {
         return false;
@@ -172,13 +181,50 @@ class Bitmask {
 
   /// Whether `this` and [other] share at least one set bit.
   bool allowsAny(Bitmask other) {
-    if (other.length != length) return false;
+    if (other.length != length) {
+      throw ArgumentError(
+        'Mismatched Bitmask lengths: $length vs ${other.length}',
+      );
+    }
     for (var i = 0; i < _words.length; i++) {
       if ((_words[i] & other._words[i]) != 0) {
         return true;
       }
     }
     return false;
+  }
+
+  /// The highest index set in both `this` and [other], or `-1` if disjoint.
+  int highestIndexIntersecting(Bitmask other) {
+    if (other.length != length) {
+      throw ArgumentError(
+        'Mismatched Bitmask lengths: $length vs ${other.length}',
+      );
+    }
+    for (var w = _words.length - 1; w >= 0; w--) {
+      final word = _words[w] & other._words[w];
+      if (word != 0) {
+        return w * 32 + word.bitLength - 1;
+      }
+    }
+    return -1;
+  }
+
+  /// The lowest index set in both `this` and [other], or `-1` if disjoint.
+  int lowestIndexIntersecting(Bitmask other) {
+    if (other.length != length) {
+      throw ArgumentError(
+        'Mismatched Bitmask lengths: $length vs ${other.length}',
+      );
+    }
+    for (var w = 0; w < _words.length; w++) {
+      final word = _words[w] & other._words[w];
+      if (word != 0) {
+        final lowestBit = word & -word;
+        return w * 32 + lowestBit.bitLength - 1;
+      }
+    }
+    return -1;
   }
 
   // Uint32List inherits reference equality from Object.

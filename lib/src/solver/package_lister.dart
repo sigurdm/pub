@@ -177,18 +177,12 @@ class PackageLister {
     if (mask.isEmpty) return null;
 
     if (_isDowngrade) {
-      final nonPrerelease = mask & index.nonPrereleaseMask;
-      final versionIndex =
-          nonPrerelease.isNotEmpty
-              ? nonPrerelease.lowestIndex()
-              : mask.lowestIndex();
+      var versionIndex = mask.lowestIndexIntersecting(index.nonPrereleaseMask);
+      if (versionIndex == -1) versionIndex = mask.lowestIndex();
       return versionIndex == -1 ? null : index.versions[versionIndex];
     } else {
-      final nonPrerelease = mask & index.nonPrereleaseMask;
-      final versionIndex =
-          nonPrerelease.isNotEmpty
-              ? nonPrerelease.highestIndex()
-              : mask.highestIndex();
+      var versionIndex = mask.highestIndexIntersecting(index.nonPrereleaseMask);
+      if (versionIndex == -1) versionIndex = mask.highestIndex();
       return versionIndex == -1 ? null : index.versions[versionIndex];
     }
   }
@@ -501,17 +495,29 @@ class PackageVersionIndex {
   /// (`mask & nonPrereleaseMask`).
   final Bitmask nonPrereleaseMask;
 
+  /// A pre-computed empty bitmask.
+  final Bitmask emptyMask;
+
   final List<Version> _versionNumbers;
 
   final _maskCache = <VersionConstraint, Bitmask>{};
 
   PackageVersionIndex(this.versions)
     : _versionNumbers = [for (final id in versions) id.version],
+      emptyMask = Bitmask.empty(versions.length),
       allVersionsMask = Bitmask.all(versions.length),
       nonPrereleaseMask = Bitmask.fromPredicate(
         versions.length,
         (i) => !versions[i].version.isPreRelease,
-      );
+      ),
+      assert(() {
+        for (var i = 1; i < versions.length; i++) {
+          if (versions[i - 1].version.compareTo(versions[i].version) > 0) {
+            return false;
+          }
+        }
+        return true;
+      }(), 'versions must be sorted by Version.compareTo');
 
   /// Returns a [Bitmask] where bit $i$ is set if and only if `versions[i]`
   /// satisfies [constraint].
@@ -519,7 +525,7 @@ class PackageVersionIndex {
   /// For [Version] and [VersionRange] constraints, uses binary search over the
   /// sorted version list to find matching index ranges in $O(\log N)$ time.
   Bitmask maskFor(VersionConstraint constraint) {
-    if (constraint.isEmpty) return Bitmask.empty(versions.length);
+    if (constraint.isEmpty) return emptyMask;
     if (constraint.isAny) return allVersionsMask;
     final cached = _maskCache[constraint];
     if (cached != null) return cached;
@@ -536,7 +542,7 @@ class PackageVersionIndex {
           _versionNumbers[targetIndex] == constraint) {
         return Bitmask.single(versions.length, targetIndex);
       } else {
-        return Bitmask.empty(versions.length);
+        return emptyMask;
       }
     } else if (constraint is VersionRange) {
       // Find the contiguous `[minIndex, maxIndex)` slice matching the range
@@ -558,7 +564,19 @@ class PackageVersionIndex {
           maxIndex++;
         }
       }
-      return Bitmask.range(versions.length, minIndex, maxIndex);
+      final rawMask = Bitmask.range(versions.length, minIndex, maxIndex);
+      if (nonPrereleaseMask.allowsAll(rawMask)) {
+        return rawMask;
+      }
+      // If there are pre-release versions in the range, verify each one
+      // because VersionRange excludes pre-releases by default unless opted in.
+      return Bitmask.fromPredicate(
+        versions.length,
+        (i) =>
+            i >= minIndex &&
+            i < maxIndex &&
+            constraint.allows(_versionNumbers[i]),
+      );
     } else if (constraint is VersionUnion) {
       // Combine masks of each disjoint range with bitwise OR.
       var mask = Bitmask.empty(versions.length);

@@ -6,7 +6,28 @@ import 'package:pub/src/solver/bitmask.dart';
 import 'package:test/test.dart';
 
 void main() {
-  for (final length in [0, 1, 5, 62, 63, 64, 65, 128, 256, 1000]) {
+  test('negative length throws RangeError', () {
+    expect(() => Bitmask.empty(-1), throwsRangeError);
+    expect(() => Bitmask.all(-1), throwsRangeError);
+    expect(() => Bitmask.single(-1, 0), throwsRangeError);
+    expect(() => Bitmask.range(-1, 0, 1), throwsRangeError);
+    expect(() => Bitmask.fromPredicate(-1, (_) => true), throwsRangeError);
+  });
+
+  test('mismatched lengths throw ArgumentError', () {
+    final m32 = Bitmask.empty(32);
+    final m33 = Bitmask.empty(33);
+
+    expect(() => m32 & m33, throwsArgumentError);
+    expect(() => m32 | m33, throwsArgumentError);
+    expect(() => m32.difference(m33), throwsArgumentError);
+    expect(() => m32.allowsAll(m33), throwsArgumentError);
+    expect(() => m32.allowsAny(m33), throwsArgumentError);
+    expect(() => m32.highestIndexIntersecting(m33), throwsArgumentError);
+    expect(() => m32.lowestIndexIntersecting(m33), throwsArgumentError);
+  });
+
+  for (final length in [0, 1, 5, 31, 32, 33, 62, 63, 64, 65, 128, 256, 1000]) {
     group('Bitmask (length $length)', () {
       test('empty mask', () {
         final mask = Bitmask.empty(length);
@@ -110,11 +131,15 @@ void main() {
             expect(intersect.count(), 1);
             expect(mask1.allowsAll(mask2), true);
             expect(mask1.allowsAny(mask2), true);
+            expect(mask1.highestIndexIntersecting(mask2), 0);
+            expect(mask1.lowestIndexIntersecting(mask2), 0);
           } else {
             expect(intersect.count(), 0);
             expect(intersect.isEmpty, true);
             expect(mask1.allowsAll(mask2), false);
             expect(mask1.allowsAny(mask2), false);
+            expect(mask1.highestIndexIntersecting(mask2), -1);
+            expect(mask1.lowestIndexIntersecting(mask2), -1);
           }
 
           final diff = union.difference(mask1);

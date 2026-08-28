@@ -301,12 +301,21 @@ class VersionSolver {
           // If [mostRecentSatisfier] doesn't satisfy [mostRecentTerm] on its
           // own, then the next-most-recent satisfier may be the one that
           // satisfies the remainder.
-          difference = mostRecentSatisfier.difference(mostRecentTerm!);
-          if (difference != null) {
-            previousSatisfierLevel = math.max(
-              previousSatisfierLevel,
-              _solution.satisfier(difference.inverse).decisionLevel,
-            );
+          final ref =
+              _solution.canonicalize(mostRecentSatisfier.package).toRef();
+          final index = _packageListers[ref]?.cachedVersionIndex;
+          if (!mostRecentSatisfier.satisfies(term, index)) {
+            difference = mostRecentSatisfier.difference(term);
+            if (difference != null &&
+                (index?.maskFor(difference.constraint).isEmpty ?? false)) {
+              difference = null;
+            }
+            if (difference != null) {
+              previousSatisfierLevel = math.max(
+                previousSatisfierLevel,
+                _solution.satisfier(difference.inverse).decisionLevel,
+              );
+            }
           }
         }
       }
