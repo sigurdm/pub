@@ -289,45 +289,11 @@ changed.
 
 ### Conditional Requests (ETags)
 
-Package repositories may support conditional HTTP requests using
-[ETags](https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.3) to allow
-clients to cache version listings and avoid transferring the full payload when
-no changes have occurred.
-
-When returning a `200 OK` response for the package listing, the repository may
-include an `ETag` HTTP response header:
-
-```http
-HTTP/1.1 200 OK
-Content-Type: application/vnd.pub.v2+json
-ETag: W/"123456789"
-```
-
-When the `dart pub` client has a cached package listing that was saved with an
-ETag, subsequent requests to `<hosted-url>/api/packages/<package>` will include
-an `If-None-Match` header carrying that ETag:
-
-```http
-GET /api/packages/<package> HTTP/1.1
-Host: <hosted-url>
-Accept: application/vnd.pub.v2+json
-If-None-Match: W/"123456789"
-```
-
-If the package listing has not changed on the server, the repository should
-respond with `304 Not Modified` and an empty response body:
-
-```http
-HTTP/1.1 304 Not Modified
-ETag: W/"123456789"
-```
-
-When receiving `304 Not Modified`, the client reuses its previously cached
-version listing document without downloading or parsing the JSON body again.
-
-If the package listing has changed (or if no `If-None-Match` header was sent, or
-the tag does not match), the server returns `200 OK` with the complete JSON
-listing and an updated `ETag` header.
+Package repositories may optionally support standard HTTP conditional requests
+using [ETags](https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.3)
+(`If-None-Match` / `304 Not Modified`). When an `ETag` response header is
+provided, the `dart pub` client caches it and validates the cached listing on
+subsequent requests.
 
 ## Publishing Packages
 
