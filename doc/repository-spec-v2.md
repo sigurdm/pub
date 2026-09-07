@@ -303,10 +303,6 @@ Content-Type: application/vnd.pub.v2+json
 ETag: W/"123456789"
 ```
 
-The ETag value may be either a strong entity-tag (e.g. `"123456789"`) or a weak
-entity-tag (e.g. `W/"123456789"`), formatted in accordance with [RFC 9110
-Section 8.8.3](https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.3).
-
 When the `dart pub` client has a cached package listing that was saved with an
 ETag, subsequent requests to `<hosted-url>/api/packages/<package>` will include
 an `If-None-Match` header carrying that ETag:
@@ -326,8 +322,6 @@ HTTP/1.1 304 Not Modified
 ETag: W/"123456789"
 ```
 
-(The `ETag` header in a `304` response is optional, but recommended.)
-
 When receiving `304 Not Modified`, the client reuses its previously cached
 version listing document without downloading or parsing the JSON body again.
 
@@ -335,29 +329,9 @@ If the package listing has changed (or if no `If-None-Match` header was sent, or
 the tag does not match), the server returns `200 OK` with the complete JSON
 listing and an updated `ETag` header.
 
-#### ETag Invalidation Requirements
-
-If a package repository supports ETags, the server **must** guarantee that the
-ETag changes whenever any part of the package listing response changes. This
-includes:
-* A new version of the package is published,
-* An existing version is retracted or un-retracted,
-* Metadata for any version is updated (e.g. `pubspec`, `archive_url`, or
-  `archive_sha256`),
-* Package-level attributes change (such as `isDiscontinued` or `replacedBy`),
-* The `advisoriesUpdated` timestamp changes.
-
-#### Backwards Compatibility
-
-ETag support is **optional** for package repositories. If a server does not
-support ETags or ignores the `If-None-Match` header, it should simply return
-`200 OK` with the full listing as usual. The `dart pub` client operates
-normally with such servers.
-
-Repositories are nevertheless strongly encouraged to implement ETag support.
-Version listing requests represent a significant portion of network requests
-during dependency resolution, and enabling conditional caching reduces latency,
-bandwidth, and server resource usage.
+ETag support is optional for package repositories; servers that do not support
+conditional requests can simply ignore `If-None-Match` and return `200 OK` as
+usual.
 
 ## Publishing Packages
 
