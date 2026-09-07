@@ -329,10 +329,6 @@ If the package listing has changed (or if no `If-None-Match` header was sent, or
 the tag does not match), the server returns `200 OK` with the complete JSON
 listing and an updated `ETag` header.
 
-ETag support is optional for package repositories; servers that do not support
-conditional requests can simply ignore `If-None-Match` and return `200 OK` as
-usual.
-
 ## Publishing Packages
 
 **GET** `<hosted-url>/api/packages/versions/new`
