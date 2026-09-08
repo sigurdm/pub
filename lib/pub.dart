@@ -89,7 +89,6 @@ Future<void> ensurePubspecResolved(
   String dir, {
   bool isOffline = false,
   SolveReportMode reportMode = SolveReportMode.none,
-  @Deprecated('Use reportMode instead.') bool? summaryOnly,
   bool onlyOutputWhenTerminal = true,
   ProgressGracePeriod? progressGracePeriod,
   f.FileSystem? fileSystem,
@@ -101,15 +100,11 @@ Future<void> ensurePubspecResolved(
   http.Client? httpClient,
 }) => withOverrides(
   () async {
-    final effectiveReportMode =
-        summaryOnly != null
-            ? (summaryOnly ? SolveReportMode.summaryOnly : SolveReportMode.full)
-            : reportMode;
     try {
       await Entrypoint.ensureUpToDate(
         dir,
         cache: SystemCache(isOffline: isOffline),
-        reportMode: effectiveReportMode,
+        reportMode: reportMode,
         onlyOutputWhenTerminal: onlyOutputWhenTerminal,
       );
     } on ApplicationException catch (e) {
