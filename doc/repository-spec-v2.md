@@ -292,7 +292,7 @@ changed.
 Package repositories may optionally support standard HTTP conditional requests
 using [ETags](https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.3)
 (`If-None-Match` / `304 Not Modified`). When an `ETag` response header is
-provided, the `dart pub` client caches it and validates the cached listing on
+provided, the `dart pub` client may cache it and validates the cached listing on
 subsequent requests.
 
 ## Publishing Packages
