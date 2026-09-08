@@ -239,7 +239,8 @@ Consider using the Dart 2.19 sdk to migrate to null safety.''');
       additionalConstraints: await _upgradeTargetConstraints(e),
       dryRun: _dryRun,
       precompile: _precompile,
-      summaryOnly: onlySummary,
+      reportMode:
+          onlySummary ? SolveReportMode.summaryOnly : SolveReportMode.full,
     );
 
     _showOfflineWarning();

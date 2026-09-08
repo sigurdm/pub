@@ -577,10 +577,7 @@ See $workspacesDocUrl for more information.''',
   /// If [precompile] is `true` (the default), this snapshots dependencies'
   /// executables.
   ///
-  /// if [summaryOnly] is `true` only success or failure will be
-  /// shown --- in case of failure, a reproduction command is shown.
-  ///
-  /// If [quiet] is `true` no output will be shown on success.
+  /// [reportMode] specifies the level of reporting output on success.
   ///
   /// Updates [lockFile] and [packageGraph] accordingly.
   ///
@@ -593,12 +590,13 @@ See $workspacesDocUrl for more information.''',
     Iterable<ConstraintAndCause>? additionalConstraints,
     bool dryRun = false,
     bool precompile = false,
-    bool summaryOnly = false,
-    bool quiet = false,
+    SolveReportMode reportMode = SolveReportMode.full,
     bool enforceLockfile = false,
   }) async {
     workspaceRoot; // This will throw early if pubspec.yaml could not be found.
-    summaryOnly = summaryOnly || _summaryOnlyEnvironment;
+    if (_summaryOnlyEnvironment && reportMode == SolveReportMode.full) {
+      reportMode = SolveReportMode.summaryOnly;
+    }
     final suffix =
         workspaceRoot.dir == '.'
             ? ''
@@ -627,7 +625,7 @@ Try running `$topLevelProgram pub get` to create `$lockFilePath`.''');
           unlock: unlock,
           additionalConstraints: additionalConstraints,
         );
-      }, transient: summaryOnly || quiet);
+      }, transient: reportMode != SolveReportMode.full);
     } on SolveFailure catch (e) {
       throw SolveFailure(
         e.incompatibility,
@@ -645,7 +643,7 @@ Try running `$topLevelProgram pub get` to create `$lockFilePath`.''');
     // archive hashes for downloaded files.
     final newLockFile = await result.downloadCachedPackages(
       cache,
-      transient: summaryOnly || quiet,
+      transient: reportMode != SolveReportMode.full,
     );
     final report = SolveReport(
       type,
@@ -658,8 +656,7 @@ Try running `$topLevelProgram pub get` to create `$lockFilePath`.''');
       cache,
       dryRun: dryRun,
       enforceLockfile: enforceLockfile,
-      quiet: quiet,
-      summaryOnly: summaryOnly,
+      reportMode: reportMode,
     );
 
     await report.show(summary: true);
@@ -1394,10 +1391,8 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
   /// Does a fast-pass check to see if the resolution is up-to-date. If not, run
   /// a resolution with `pub get` semantics.
   ///
-  /// If [summaryOnly] is `true` only a short summary is shown of
-  /// the solve.
-  ///
-  /// If [quiet] is `true` (the default) no output will be shown on success.
+  /// [reportMode] specifies the level of reporting output on success. Defaults
+  /// to [SolveReportMode.none] (no output).
   ///
   /// If [onlyOutputWhenTerminal] is `true` (the default) there will be no
   /// output if no terminal is attached.
@@ -1407,8 +1402,7 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
   static Future<({PackageConfig packageConfig, String rootDir})> ensureUpToDate(
     String dir, {
     required SystemCache cache,
-    bool summaryOnly = false,
-    bool quiet = true,
+    SolveReportMode reportMode = SolveReportMode.none,
     bool onlyOutputWhenTerminal = true,
   }) async {
     late final wasRelative = p.isRelative(dir);
@@ -1432,15 +1426,13 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
       await log.errorsOnlyUnlessTerminal(() async {
         await entrypoint.acquireDependencies(
           SolveType.get,
-          summaryOnly: summaryOnly,
-          quiet: quiet,
+          reportMode: reportMode,
         );
       });
     } else {
       await entrypoint.acquireDependencies(
         SolveType.get,
-        summaryOnly: summaryOnly,
-        quiet: quiet,
+        reportMode: reportMode,
       );
     }
     return (

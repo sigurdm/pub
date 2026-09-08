@@ -330,7 +330,7 @@ To recompile executables, first run `$topLevelProgram pub global deactivate $nam
           result.availableVersions,
           cache,
           dryRun: false,
-          quiet: false,
+          reportMode: SolveReportMode.full,
           enforceLockfile: false,
         ).show(summary: false);
       }
@@ -588,7 +588,7 @@ Try reactivating the package.
           cache,
           dryRun: true,
           enforceLockfile: true,
-          quiet: false,
+          reportMode: SolveReportMode.full,
         );
         await report.show(summary: true);
 

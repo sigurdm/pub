@@ -14,6 +14,7 @@ import 'src/http.dart';
 import 'src/io.dart';
 import 'src/progress.dart';
 import 'src/pub_embeddable_command.dart';
+import 'src/solver/report.dart';
 import 'src/source/git.dart';
 import 'src/system_cache.dart';
 
@@ -24,6 +25,7 @@ export 'src/executable.dart'
         DartExecutableWithPackageConfig,
         getExecutableForCommand;
 export 'src/progress.dart' show ProgressGracePeriod, withProgressGracePeriod;
+export 'src/solver/report.dart' show SolveReportMode;
 
 /// Returns a [Command] for pub functionality that can be used by an embedding
 /// CommandRunner.
@@ -73,10 +75,8 @@ Command<int> pubCommand({
 ///
 /// Will compare file timestamps to see if full resolution can be skipped.
 ///
-/// If [summaryOnly] is `true` only a short summary is shown of
-/// the solve.
-///
-/// If [quiet] is `true` (the default) no output will be shown on success.
+/// [reportMode] specifies the level of reporting output on success. Defaults
+/// to [SolveReportMode.none] (no output).
 ///
 /// If [onlyOutputWhenTerminal] is `true` (the default) there will be no
 /// output if no terminal is attached.
@@ -88,8 +88,8 @@ Command<int> pubCommand({
 Future<void> ensurePubspecResolved(
   String dir, {
   bool isOffline = false,
-  bool summaryOnly = false,
-  bool quiet = true,
+  SolveReportMode reportMode = SolveReportMode.none,
+  @Deprecated('Use reportMode instead.') bool? summaryOnly,
   bool onlyOutputWhenTerminal = true,
   ProgressGracePeriod? progressGracePeriod,
   f.FileSystem? fileSystem,
@@ -101,12 +101,15 @@ Future<void> ensurePubspecResolved(
   http.Client? httpClient,
 }) => withOverrides(
   () async {
+    final effectiveReportMode =
+        summaryOnly != null
+            ? (summaryOnly ? SolveReportMode.summaryOnly : SolveReportMode.full)
+            : reportMode;
     try {
       await Entrypoint.ensureUpToDate(
         dir,
         cache: SystemCache(isOffline: isOffline),
-        summaryOnly: summaryOnly,
-        quiet: quiet,
+        reportMode: effectiveReportMode,
         onlyOutputWhenTerminal: onlyOutputWhenTerminal,
       );
     } on ApplicationException catch (e) {
