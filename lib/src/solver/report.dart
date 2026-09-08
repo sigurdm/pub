@@ -37,6 +37,9 @@ class SolveReport {
   /// If quiet, no summary or package changes are output at normal log level.
   final bool _quiet;
 
+  /// If true, only a one-line summary is output, omitting package changes.
+  final bool _summaryOnly;
+
   final bool _enforceLockfile;
 
   /// The available versions of all selected packages from their source.
@@ -62,8 +65,10 @@ class SolveReport {
     required bool dryRun,
     required bool enforceLockfile,
     required bool quiet,
+    bool summaryOnly = false,
   }) : _dryRun = dryRun,
        _quiet = quiet,
+       _summaryOnly = summaryOnly,
        _enforceLockfile = enforceLockfile;
 
   /// Displays a report of the results of the version resolution in
@@ -169,6 +174,16 @@ $contentHashesDocumentationUrl
         }
       } else {
         log.fine('Got dependencies$suffix.');
+      }
+    } else if (_summaryOnly) {
+      if (_dryRun) {
+        log.message('Would get dependencies$suffix.');
+      } else if (_enforceLockfile) {
+        if (changes == 0) {
+          log.message('Got dependencies$suffix.');
+        }
+      } else {
+        log.message('Got dependencies$suffix.');
       }
     } else {
       if (_dryRun) {
@@ -572,7 +587,7 @@ $contentHashesDocumentationUrl
   }
 
   void warning(String message) {
-    if (_quiet) {
+    if (_quiet || _summaryOnly) {
       log.fine(message);
     } else {
       log.warning(message);
@@ -580,7 +595,7 @@ $contentHashesDocumentationUrl
   }
 
   void message(String message) {
-    if (_quiet) {
+    if (_quiet || _summaryOnly) {
       log.fine(message);
     } else {
       log.message(message);

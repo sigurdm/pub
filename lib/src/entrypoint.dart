@@ -580,6 +580,8 @@ See $workspacesDocUrl for more information.''',
   /// if [summaryOnly] is `true` only success or failure will be
   /// shown --- in case of failure, a reproduction command is shown.
   ///
+  /// If [quiet] is `true` no output will be shown on success.
+  ///
   /// Updates [lockFile] and [packageGraph] accordingly.
   ///
   /// If [enforceLockfile] is true no changes to the current lockfile are
@@ -592,6 +594,7 @@ See $workspacesDocUrl for more information.''',
     bool dryRun = false,
     bool precompile = false,
     bool summaryOnly = false,
+    bool quiet = false,
     bool enforceLockfile = false,
   }) async {
     workspaceRoot; // This will throw early if pubspec.yaml could not be found.
@@ -624,7 +627,7 @@ Try running `$topLevelProgram pub get` to create `$lockFilePath`.''');
           unlock: unlock,
           additionalConstraints: additionalConstraints,
         );
-      }, transient: summaryOnly);
+      }, transient: summaryOnly || quiet);
     } on SolveFailure catch (e) {
       throw SolveFailure(
         e.incompatibility,
@@ -642,7 +645,7 @@ Try running `$topLevelProgram pub get` to create `$lockFilePath`.''');
     // archive hashes for downloaded files.
     final newLockFile = await result.downloadCachedPackages(
       cache,
-      transient: summaryOnly,
+      transient: summaryOnly || quiet,
     );
     final report = SolveReport(
       type,
@@ -655,7 +658,8 @@ Try running `$topLevelProgram pub get` to create `$lockFilePath`.''');
       cache,
       dryRun: dryRun,
       enforceLockfile: enforceLockfile,
-      quiet: summaryOnly,
+      quiet: quiet,
+      summaryOnly: summaryOnly,
     );
 
     await report.show(summary: true);
@@ -1390,8 +1394,10 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
   /// Does a fast-pass check to see if the resolution is up-to-date. If not, run
   /// a resolution with `pub get` semantics.
   ///
-  /// If [summaryOnly] is `true` (the default) only a short summary is shown of
+  /// If [summaryOnly] is `true` only a short summary is shown of
   /// the solve.
+  ///
+  /// If [quiet] is `true` (the default) no output will be shown on success.
   ///
   /// If [onlyOutputWhenTerminal] is `true` (the default) there will be no
   /// output if no terminal is attached.
@@ -1401,7 +1407,8 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
   static Future<({PackageConfig packageConfig, String rootDir})> ensureUpToDate(
     String dir, {
     required SystemCache cache,
-    bool summaryOnly = true,
+    bool summaryOnly = false,
+    bool quiet = true,
     bool onlyOutputWhenTerminal = true,
   }) async {
     late final wasRelative = p.isRelative(dir);
@@ -1426,12 +1433,14 @@ To update `$lockFilePath` run `$topLevelProgram pub get`$suffix without
         await entrypoint.acquireDependencies(
           SolveType.get,
           summaryOnly: summaryOnly,
+          quiet: quiet,
         );
       });
     } else {
       await entrypoint.acquireDependencies(
         SolveType.get,
         summaryOnly: summaryOnly,
+        quiet: quiet,
       );
     }
     return (

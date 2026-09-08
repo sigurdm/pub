@@ -36,7 +36,7 @@ dependencies:
 
     await ensurePubspecResolved(
       '/workspace',
-      summaryOnly: false,
+      quiet: false,
       onlyOutputWhenTerminal: false,
 
       fileSystem: fs,

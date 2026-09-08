@@ -73,8 +73,10 @@ Command<int> pubCommand({
 ///
 /// Will compare file timestamps to see if full resolution can be skipped.
 ///
-/// If [summaryOnly] is `true` (the default) only a short summary is shown of
+/// If [summaryOnly] is `true` only a short summary is shown of
 /// the solve.
+///
+/// If [quiet] is `true` (the default) no output will be shown on success.
 ///
 /// If [onlyOutputWhenTerminal] is `true` (the default) there will be no
 /// output if no terminal is attached.
@@ -86,7 +88,8 @@ Command<int> pubCommand({
 Future<void> ensurePubspecResolved(
   String dir, {
   bool isOffline = false,
-  bool summaryOnly = true,
+  bool summaryOnly = false,
+  bool quiet = true,
   bool onlyOutputWhenTerminal = true,
   ProgressGracePeriod? progressGracePeriod,
   f.FileSystem? fileSystem,
@@ -103,6 +106,7 @@ Future<void> ensurePubspecResolved(
         dir,
         cache: SystemCache(isOffline: isOffline),
         summaryOnly: summaryOnly,
+        quiet: quiet,
         onlyOutputWhenTerminal: onlyOutputWhenTerminal,
       );
     } on ApplicationException catch (e) {
