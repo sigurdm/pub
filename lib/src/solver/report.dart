@@ -34,7 +34,7 @@ class SolveReport {
   final bool _dryRun;
   final Map<String, PackageRange> _overriddenPackages;
 
-  /// If quiet only a single summary line is output.
+  /// If quiet, no summary or package changes are output at normal log level.
   final bool _quiet;
 
   final bool _enforceLockfile;
@@ -162,13 +162,13 @@ $contentHashesDocumentationUrl
 
     if (_quiet) {
       if (_dryRun) {
-        log.message('Would get dependencies$suffix.');
+        log.fine('Would get dependencies$suffix.');
       } else if (_enforceLockfile) {
         if (changes == 0) {
-          log.message('Got dependencies$suffix.');
+          log.fine('Got dependencies$suffix.');
         }
       } else {
-        log.message('Got dependencies$suffix.');
+        log.fine('Got dependencies$suffix.');
       }
     } else {
       if (_dryRun) {
