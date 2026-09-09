@@ -2,36 +2,18 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:convert';
+
 import 'package:pub_semver/pub_semver.dart';
 
 import '../system_cache.dart';
+import 'default_trusted_root.dart';
 import 'sigstore.dart';
 import 'trusted_root.dart';
 
 export 'lockfile_policy.dart';
 export 'sigstore.dart';
 export 'trusted_root.dart';
-
-/// Result of verifying a package attestation bundle.
-class AttestationVerificationResult {
-  final bool isValid;
-  final String packageName;
-  final Version? packageVersion;
-  final String? repository;
-  final String? signerIdentity;
-  final String? oidcIssuer;
-  final List<String> errors;
-
-  AttestationVerificationResult({
-    required this.isValid,
-    required this.packageName,
-    this.packageVersion,
-    this.repository,
-    this.signerIdentity,
-    this.oidcIssuer,
-    this.errors = const [],
-  });
-}
 
 /// Attestation verifier in pub pre-configured with the Sigstore trusted root.
 class PubAttestationVerifier {
@@ -50,6 +32,9 @@ class PubAttestationVerifier {
        _overrideTrustedRootJson = overrideTrustedRootJson,
        _offline = offline;
 
+  /// Whether verification runs in offline mode.
+  bool get offline => _offline;
+
   AttestationVerificationResult verify({
     required String packageName,
     required Version packageVersion,
@@ -59,99 +44,25 @@ class PubAttestationVerifier {
     String? pubspecRepository,
   }) {
     try {
-      var trustedRootJson = _overrideTrustedRootJson ?? '';
-      if (trustedRootJson.isEmpty) {
-        trustedRootJson =
+      var trustedRootJsonStr = _overrideTrustedRootJson ?? '';
+      if (trustedRootJsonStr.isEmpty) {
+        trustedRootJsonStr =
             loadTrustedRootJson(
               cache: _cache,
               overridePath: _overrideTrustedRootPath,
             ) ??
-            '';
+            defaultProductionTrustedRootJson;
       }
+      final trustedRootMap =
+          jsonDecode(trustedRootJsonStr) as Map<String, dynamic>;
 
-      final client = SigstoreClient.create();
-      final policy = SigstoreVerificationPolicy.create(
-        '',
-        'https://token.actions.githubusercontent.com',
-        _offline,
-        false,
-        trustedRootJson,
-        '',
-      );
-
-      final result = client.verify(archiveBytes, false, bundle, policy);
-      if (!result.isValid()) {
-        return AttestationVerificationResult(
-          isValid: false,
-          packageName: packageName,
-          packageVersion: packageVersion,
-          errors: ['Attestation signature verification failed'],
-        );
-      }
-
-      final identity = result.verifiedIdentity();
-      final issuer = result.verifiedIssuer();
-      String? repo;
-      if (identity.startsWith('https://github.com/')) {
-        final parts = identity
-            .substring('https://github.com/'.length)
-            .split('/');
-        if (parts.length >= 2) {
-          repo = 'https://github.com/${parts[0]}/${parts[1]}';
-        }
-      } else {
-        return AttestationVerificationResult(
-          isValid: false,
-          packageName: packageName,
-          packageVersion: packageVersion,
-          signerIdentity: identity,
-          oidcIssuer: issuer,
-          errors: [
-            'Package attestation verification is currently only supported '
-                'for GitHub repositories (signer identity: "$identity").',
-          ],
-        );
-      }
-
-      final targetRepo = expectedRepository ?? pubspecRepository;
-      if (targetRepo != null && targetRepo.isNotEmpty) {
-        if (!targetRepo.contains('github.com')) {
-          return AttestationVerificationResult(
-            isValid: false,
-            packageName: packageName,
-            packageVersion: packageVersion,
-            repository: repo,
-            signerIdentity: identity,
-            oidcIssuer: issuer,
-            errors: [
-              'Package attestation verification is currently only supported '
-                  'for GitHub repositories (got: "$targetRepo").',
-            ],
-          );
-        }
-        if (repo == null || !_repositoriesMatch(repo, targetRepo)) {
-          final msg =
-              'Attestation identity "$identity" does not match expected '
-              'repository "$targetRepo"';
-          return AttestationVerificationResult(
-            isValid: false,
-            packageName: packageName,
-            packageVersion: packageVersion,
-            repository: repo,
-            signerIdentity: identity,
-            oidcIssuer: issuer,
-            errors: [msg],
-          );
-        }
-      }
-
-      return AttestationVerificationResult(
-        isValid: true,
+      return PureDartSigstoreVerifier.verify(
         packageName: packageName,
         packageVersion: packageVersion,
-        repository: repo ?? targetRepo,
-        signerIdentity: identity,
-        oidcIssuer: issuer,
+        archiveBytes: archiveBytes,
+        bundle: bundle,
+        trustedRootJson: trustedRootMap,
+        expectedRepository: expectedRepository ?? pubspecRepository,
       );
     } catch (e) {
       return AttestationVerificationResult(
@@ -161,19 +72,5 @@ class PubAttestationVerifier {
         errors: [e.toString()],
       );
     }
-  }
-
-  static bool _repositoriesMatch(String a, String b) {
-    final normA = a
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'\.git$'), '')
-        .replaceAll(RegExp(r'/+$'), '');
-    final normB = b
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'\.git$'), '')
-        .replaceAll(RegExp(r'/+$'), '');
-    return normA == normB || normA.endsWith(normB) || normB.endsWith(normA);
   }
 }
