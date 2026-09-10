@@ -28,10 +28,13 @@ class UpgradeCommand extends PubCommand {
   String get description => '''
 Upgrade the current package's dependencies to latest versions.
 
-To upgrade specific packages, pass them as arguments. You can optionally
-specify a target version or constraint after `@`:
+To upgrade specific packages, pass one or more of them as arguments. You can
+optionally specify a target version or constraint after `@`:
   * Upgrade to the latest compatible version:
     `$topLevelProgram pub upgrade foo`
+  * Upgrade multiple packages:
+    `$topLevelProgram pub upgrade foo bar`
+    `$topLevelProgram pub upgrade foo 'bar@^2.0.0'`
   * Upgrade within a version constraint (same syntax as pubspec.yaml):
     `$topLevelProgram pub upgrade foo@^1.2.3`
   * Upgrade to a specific version:
@@ -44,7 +47,7 @@ specify a target version or constraint after `@`:
     `$topLevelProgram pub upgrade foo@resolvable`''';
   @override
   String get argumentsDescription =>
-      '[<package>[@<constraint>|@latest|@resolvable]...]';
+      '[<package>[@<constraint>|@latest|@resolvable] ...]';
   @override
   String get docUrl => 'https://dart.dev/tools/pub/cmd/pub-upgrade';
 

@@ -801,7 +801,7 @@ void main() {
           contains('Use standard pubspec.yaml constraint syntax'),
           contains(
             'Usage: pub upgrade '
-            '[<package>[@<constraint>|@latest|@resolvable]...]',
+            '[<package>[@<constraint>|@latest|@resolvable] ...]',
           ),
         ),
         exitCode: exit_codes.USAGE,
