@@ -1430,7 +1430,11 @@ R withOverrides<R>(
   StreamSink<List<int>>? stderr,
   http.Client? httpClient,
 }) {
-  // If there are no overrides we're done.
+  // If there are no overrides at all we're done.
+  //
+  // This deliberately calls [fn] directly rather than falling through to the
+  // check below. Going via [runWithProgressGracePeriod] would add a frame to
+  // every stack trace produced under `pub`, which shows up in crash logs.
   if (fileSystem == null &&
       environment == null &&
       platformVersion == null &&
