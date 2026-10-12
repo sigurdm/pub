@@ -10,7 +10,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:collection/collection.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 import 'command_runner.dart';
@@ -179,7 +178,13 @@ Uint8List runSyncBytes(
 
 /// The name of the git command-line app, or `null` if Git could not be found on
 /// the user's PATH.
-final String? command = ['git', 'git.cmd'].firstWhereOrNull(_tryGitCommand);
+///
+/// Only `git` is considered, which on Windows resolves to `git.exe`. Batch
+/// files such as `git.cmd` or `git.bat` are deliberately not probed: Windows
+/// runs them through `cmd.exe`, which interprets metacharacters in arguments
+/// (like `&` in a git ref or url) as command separators. Git for Windows has
+/// shipped a native `git.exe` since version 2.0.
+final String? command = _tryGitCommand('git') ? 'git' : null;
 
 /// Returns the root of the git repo [dir] belongs to. Returns `null` if not
 /// in a git repo or git is not installed.
