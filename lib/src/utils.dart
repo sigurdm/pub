@@ -486,11 +486,31 @@ String prefixLines(String text, {String prefix = '| ', String? firstPrefix}) {
   return lines.join('\n');
 }
 
-/// The subset of strings that don't need quoting in YAML.
+/// Strings that are valid YAML plain scalars and, except for
+/// [_yamlReservedWords], load back as strings.
 ///
-/// This pattern does not strictly follow the plain scalar grammar of YAML,
-/// which means some strings may be unnecessarily quoted, but it's much simpler.
-final _unquotableYamlString = RegExp(r'^[a-zA-Z_-][a-zA-Z_0-9-]*$');
+/// Much stricter than the YAML 1.2 grammar (anything starting with a digit
+/// or `-` is quoted) and close to the historical pattern, so existing
+/// lockfiles don't churn.
+final _unquotableYamlString = RegExp(r'^[a-zA-Z_][a-zA-Z_0-9-]*$');
+
+/// YAML 1.2 Core Schema boolean and null keywords that match
+/// [_unquotableYamlString] and must therefore be quoted.
+const _yamlReservedWords = {
+  'true',
+  'True',
+  'TRUE',
+  'false',
+  'False',
+  'FALSE',
+  'null',
+  'Null',
+  'NULL',
+};
+
+bool _needsYamlQuotes(String string) =>
+    _yamlReservedWords.contains(string) ||
+    !_unquotableYamlString.hasMatch(string);
 
 /// Converts [data], which is a parsed YAML object, to a pretty-printed string,
 /// using indentation for maps.
@@ -518,7 +538,7 @@ String yamlToString(Object? data) {
         first = false;
 
         var keyString = key;
-        if (key is! String || !_unquotableYamlString.hasMatch(key)) {
+        if (key is! String || _needsYamlQuotes(key)) {
           keyString = jsonEncode(key);
         }
 
@@ -534,7 +554,7 @@ String yamlToString(Object? data) {
     var string = data;
 
     // Don't quote plain strings if not needed.
-    if (data is! String || !_unquotableYamlString.hasMatch(data)) {
+    if (data is! String || _needsYamlQuotes(data)) {
       string = jsonEncode(data);
     }
 

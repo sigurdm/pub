@@ -45,4 +45,32 @@ void main() {
       ]),
     ]).validate();
   });
+
+  test(
+    'checks out a package at a branch whose name is a YAML keyword',
+    () async {
+      ensureGit();
+
+      final repo = d.git('foo.git', [
+        d.libDir('foo', 'foo 1'),
+        d.libPubspec('foo', '1.0.0'),
+      ]);
+      await repo.create();
+      await repo.runGit(['branch', 'true']);
+
+      await d
+          .appDir(
+            dependencies: {
+              'foo': {
+                'git': {'url': '../foo.git', 'ref': 'true'},
+              },
+            },
+          )
+          .create();
+
+      await pubGet();
+      // Re-run to verify pubspec.lock quotes `ref: "true"` and round-trips.
+      await pubGet();
+    },
+  );
 }

@@ -31,5 +31,9 @@ void main() {
     await d.appPackageConfigFile([
       d.packageConfigEntry(name: 'foo', path: p.join(d.sandbox, 'foo')),
     ]).validate();
+
+    // Ensure the written pubspec.lock parses cleanly with boolean
+    // `relative: false`.
+    await pubGet();
   });
 }

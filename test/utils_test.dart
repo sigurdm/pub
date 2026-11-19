@@ -9,11 +9,17 @@ import 'dart:async';
 
 import 'package:pub/src/utils.dart';
 import 'package:test/test.dart';
+import 'package:yaml/yaml.dart';
 
 void main() {
   group('yamlToString()', () {
     test('null', () {
       expect(yamlToString(null), equals('null'));
+    });
+
+    test('booleans', () {
+      expect(yamlToString(true), equals('true'));
+      expect(yamlToString(false), equals('false'));
     });
 
     test('numbers', () {
@@ -26,16 +32,84 @@ void main() {
       expect(yamlToString('some-string'), equals('some-string'));
       expect(yamlToString('hey123CAPS'), equals('hey123CAPS'));
       expect(yamlToString('_under_score'), equals('_under_score'));
+      expect(yamlToString('falSE'), equals('falSE'));
     });
 
     test('quotes other strings', () {
       expect(yamlToString(''), equals('""'));
       expect(yamlToString('123'), equals('"123"'));
+      expect(yamlToString('12.34'), equals('"12.34"'));
       expect(yamlToString('white space'), equals('"white space"'));
       expect(yamlToString('"quote"'), equals(r'"\"quote\""'));
       expect(yamlToString("apostrophe'"), equals('"apostrophe\'"'));
       expect(yamlToString('new\nline'), equals(r'"new\nline"'));
       expect(yamlToString('?unctu@t!on'), equals(r'"?unctu@t!on"'));
+      expect(yamlToString('true'), equals('"true"'));
+      expect(yamlToString('True'), equals('"True"'));
+      expect(yamlToString('TRUE'), equals('"TRUE"'));
+      expect(yamlToString('false'), equals('"false"'));
+      expect(yamlToString('False'), equals('"False"'));
+      expect(yamlToString('FALSE'), equals('"FALSE"'));
+      expect(yamlToString('null'), equals('"null"'));
+      expect(yamlToString('Null'), equals('"Null"'));
+      expect(yamlToString('NULL'), equals('"NULL"'));
+      expect(yamlToString('~'), equals('"~"'));
+      expect(yamlToString('-'), equals('"-"'));
+      expect(yamlToString('---'), equals('"---"'));
+      expect(yamlToString('-123'), equals('"-123"'));
+      expect(yamlToString('-1e5'), equals('"-1e5"'));
+      expect(yamlToString('-foo'), equals('"-foo"'));
+    });
+
+    test('round-trips strings through loadYaml', () {
+      const samples = [
+        '',
+        'a',
+        'some-string',
+        'hey123CAPS',
+        '_under_score',
+        'true',
+        'True',
+        'TRUE',
+        'false',
+        'False',
+        'FALSE',
+        'falSE',
+        'null',
+        'Null',
+        'NULL',
+        '~',
+        '-',
+        '--',
+        '---',
+        '.',
+        '..',
+        '...',
+        '123',
+        '-123',
+        '12.34',
+        '1e-5',
+        '1E5',
+        '-1e5',
+        '0x1a',
+        '0o77',
+        '.inf',
+        '-.inf',
+        '.nan',
+        'no',
+        'yes',
+      ];
+      for (final sample in samples) {
+        expect(
+          loadYaml(yamlToString(sample)),
+          equals(sample),
+          reason: 'scalar "$sample"',
+        );
+        final asValue = loadYaml(yamlToString({'k': sample})) as YamlMap;
+        expect(asValue['k'], equals(sample), reason: 'map value "$sample"');
+        final asKey = loadYaml(yamlToString({sample: 1})) as YamlMap;
+        expect(asKey.keys.single, equals(sample), reason: 'map key "$sample"');
+      }
     });
 
     test('lists use JSON style', () {
@@ -87,7 +161,7 @@ no: 1
         yamlToString(map),
         equals('''
 123: num
-null: null
+null: "null"
 true: bool'''),
       );
     });

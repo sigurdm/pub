@@ -7,7 +7,9 @@ library;
 
 import 'package:pub/src/lock_file.dart';
 import 'package:pub/src/package_name.dart';
+import 'package:pub/src/path.dart';
 import 'package:pub/src/source/hosted.dart';
+import 'package:pub/src/source/path.dart';
 import 'package:pub/src/system_cache.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:source_span/source_span.dart';
@@ -353,6 +355,30 @@ packages:
         }),
       );
     });
+
+    test(
+      'serialize() emits boolean relative: false for absolute path deps',
+      () {
+        final absPath = p.absolute('foo');
+        final description = ResolvedPathDescription(
+          PathDescription(absPath, false),
+        );
+        expect(
+          description.serializeForLockfile(containingDir: null),
+          equals({'path': absPath, 'relative': false}),
+        );
+
+        final lockfile = LockFile([
+          PackageId('foo', Version.parse('1.0.0'), description),
+        ]);
+        final serialized = lockfile.serialize('', cache);
+        final parsed = LockFile.parse(serialized, sources);
+        final parsedDesc =
+            parsed.packages['foo']!.description.description as PathDescription;
+        expect(parsedDesc.relative, isFalse);
+        expect(parsedDesc.path, equals(absPath));
+      },
+    );
   });
 }
 
