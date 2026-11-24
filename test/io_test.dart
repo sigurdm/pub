@@ -612,6 +612,416 @@ void main() {
         await expectLater(Directory(tempDir).list(), emitsDone);
       });
     });
+
+    test('rejects symlink created through an earlier directory symlink', () {
+      return withTempDir((tempDir) async {
+        final canaryDir = p.join(tempDir, 'outside');
+        ensureDir(canaryDir);
+        final canary = p.join(canaryDir, 'target.txt');
+        writeTextFile(canary, 'original');
+
+        final extractDir = p.join(tempDir, 'cache', '_temp', 'dir');
+        ensureDir(extractDir);
+
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 's/',
+              typeFlag: TypeFlag.dir,
+              mode: _defaultMode | _executableMask,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'p1/p2/p3/p4',
+              typeFlag: TypeFlag.symlink,
+              linkName: '../../../s',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'p1/p2/p3/p4/L',
+              typeFlag: TypeFlag.symlink,
+              linkName: '../../../../outside',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 's/L/target.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('overwritten'),
+          ),
+        ]);
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            extractDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('traverses a symlink'),
+            ),
+          ),
+        );
+
+        expect(readTextFile(canary), 'original');
+      });
+    });
+
+    test('rejects hardlink created through an earlier directory link', () {
+      return withTempDir((tempDir) async {
+        final canaryDir = p.join(tempDir, 'outside');
+        ensureDir(canaryDir);
+        final canary = p.join(canaryDir, 'target.txt');
+        writeTextFile(canary, 'original');
+
+        final extractDir = p.join(tempDir, 'cache', '_temp', 'dir');
+        ensureDir(extractDir);
+
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 's/',
+              typeFlag: TypeFlag.dir,
+              mode: _defaultMode | _executableMask,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'p1/p2/p3/p4',
+              typeFlag: TypeFlag.link,
+              linkName: 's',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'p1/p2/p3/p4/L',
+              typeFlag: TypeFlag.link,
+              linkName: 'outside',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 's/L/target.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('overwritten'),
+          ),
+        ]);
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            extractDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('traverses a symlink'),
+            ),
+          ),
+        );
+
+        expect(readTextFile(canary), 'original');
+      });
+    });
+
+    test('rejects symlink created through a self-referencing symlink', () {
+      return withTempDir((tempDir) async {
+        final canaryDir = p.join(tempDir, 'outside');
+        ensureDir(canaryDir);
+        final canary = p.join(canaryDir, 'target.txt');
+        writeTextFile(canary, 'original');
+
+        final extractDir = p.join(tempDir, 'cache', '_temp', 'dir');
+        ensureDir(extractDir);
+
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 'a/L',
+              typeFlag: TypeFlag.symlink,
+              linkName: '.',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'a/L/L/L/L/M',
+              typeFlag: TypeFlag.symlink,
+              linkName: '../../../../../outside',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'a/M/target.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('overwritten'),
+          ),
+        ]);
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            extractDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('traverses a symlink'),
+            ),
+          ),
+        );
+
+        expect(readTextFile(canary), 'original');
+      });
+    });
+
+    test('rejects parent symlink ordered after child symlink', () {
+      return withTempDir((tempDir) async {
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 's/',
+              typeFlag: TypeFlag.dir,
+              mode: _defaultMode | _executableMask,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'p1/p2/p3/p4/L',
+              typeFlag: TypeFlag.symlink,
+              linkName: '../../../../other',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'p1/p2/p3/p4',
+              typeFlag: TypeFlag.symlink,
+              linkName: '../../../s',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+        ]);
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            tempDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('conflicting path'),
+            ),
+          ),
+        );
+      });
+    });
+
+    test('rejects regular file colliding with symlink parent', () {
+      return withTempDir((tempDir) async {
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 's/',
+              typeFlag: TypeFlag.dir,
+              mode: _defaultMode | _executableMask,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'alias',
+              typeFlag: TypeFlag.symlink,
+              linkName: 's',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'alias/file.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('data'),
+          ),
+        ]);
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            tempDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('conflicting path'),
+            ),
+          ),
+        );
+      });
+    });
+
+    test('rejects symlink with empty link target', () {
+      return withTempDir((tempDir) async {
+        final entries = Stream<TarEntry>.value(
+          TarEntry.data(
+            TarHeader(
+              name: 'bad_link',
+              typeFlag: TypeFlag.symlink,
+              linkName: '',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+        );
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            tempDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid tar link entry'),
+            ),
+          ),
+        );
+      });
+    });
+
+    test('skips symlinks with absolute target inside destination', () {
+      return withTempDir((tempDir) async {
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 'lib/main.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('text content'),
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'bin/abs_link',
+              typeFlag: TypeFlag.symlink,
+              linkName: p.join(tempDir, 'lib', 'main.txt'),
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+        ]);
+
+        await extractTarGz(
+          entries.transform(tarWriter).transform(gzip.encoder),
+          tempDir,
+        );
+
+        expect(linkExists(p.join(tempDir, 'bin', 'abs_link')), isFalse);
+      });
+    });
+
+    test('rejects entry with regular file as parent directory', () {
+      return withTempDir((tempDir) async {
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(name: 'file', typeFlag: TypeFlag.reg, mode: _defaultMode),
+            utf8.encode('content'),
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'file/child.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('child'),
+          ),
+        ]);
+
+        await expectLater(
+          extractTarGz(
+            entries.transform(tarWriter).transform(gzip.encoder),
+            tempDir,
+          ),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('non-directory parent'),
+            ),
+          ),
+        );
+      });
+    });
+
+    test('extracts symlink appearing before its target', () {
+      return withTempDir((tempDir) async {
+        final entries = Stream<TarEntry>.fromIterable([
+          TarEntry.data(
+            TarHeader(
+              name: 'bin/main.txt',
+              typeFlag: TypeFlag.symlink,
+              linkName: '../lib/main.txt',
+              mode: _defaultMode,
+            ),
+            const [],
+          ),
+          TarEntry.data(
+            TarHeader(
+              name: 'lib/main.txt',
+              typeFlag: TypeFlag.reg,
+              mode: _defaultMode,
+            ),
+            utf8.encode('text content'),
+          ),
+        ]);
+
+        await extractTarGz(
+          entries.transform(tarWriter).transform(gzip.encoder),
+          tempDir,
+        );
+
+        await d
+            .dir('.', [
+              d.file('lib/main.txt', 'text content'),
+              d.file('bin/main.txt', 'text content'),
+            ])
+            .validate(tempDir);
+      });
+    });
   });
 
   testExistencePredicate(

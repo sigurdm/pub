@@ -1222,105 +1222,214 @@ Future<Uint8List> extractFileFromTarGz(
   throw FormatException('Could not find $filename in archive');
 }
 
+/// Matches a Windows drive letter prefix such as `C:`.
+final _windowsDrivePrefix = RegExp(r'^[a-zA-Z]:');
+
 /// Extracts a `.tar.gz` file from [stream] to [destination].
 Future<void> extractTarGz(Stream<List<int>> stream, String destination) async {
   log.fine('Extracting .tar.gz stream to $destination.');
 
-  destination = p.absolute(destination);
+  destination = p.normalize(p.absolute(destination));
   final reader = TarReader(stream.transform(gzipDecoder));
   final paths = <String>{};
-  while (await reader.moveNext()) {
-    final entry = reader.current;
+  final pendingLinks =
+      <({String name, TypeFlag type, String filePath, String? linkName})>[];
 
-    final filePath = p.normalize(
-      p.joinAll([
-        destination,
-        // Tar file names always use forward slashes
-        ...p.posix.split(entry.name),
-      ]),
-    );
-    if (!paths.add(filePath)) {
-      // The tar file contained the same entry twice. Assume it is broken.
-      await reader.cancel();
-      throw FormatException('Tar file contained duplicate path ${entry.name}');
+  /// Verifies that no ancestor component of [path] strictly inside
+  /// [destination] is a symlink or non-directory.
+  ///
+  /// Uses `followLinks: false` on the filesystem directly so OS-specific path
+  /// aliasing (case-insensitivity, Unicode normalization, Windows short names
+  /// and trailing dots/spaces) is checked against what the OS would traverse.
+  void ensureNoSymlinkAncestors(String path, {required String entryName}) {
+    if (p.equals(destination, path)) return;
+    final relative = p.relative(path, from: destination);
+    final parts = p.split(relative);
+    var current = destination;
+    for (var i = 0; i < parts.length - 1; i++) {
+      current = p.join(current, parts[i]);
+      final type = FileSystemEntity.typeSync(current, followLinks: false);
+      if (type == FileSystemEntityType.link) {
+        throw FormatException(
+          'Invalid tar entry: `$entryName` traverses a symlink',
+        );
+      }
+      if (type == FileSystemEntityType.notFound) {
+        // Remaining parent components do not exist yet, so none can be
+        // symlinks or conflicting files.
+        break;
+      }
+      if (type != FileSystemEntityType.directory) {
+        throw FormatException(
+          'Invalid tar entry: `$entryName` has non-directory parent',
+        );
+      }
     }
+  }
 
-    if (!(p.isWithin(destination, filePath) ||
-        // allow including '.' as an entry in the tar.gz archive.
-        (entry.type == TypeFlag.dir && p.equals(destination, filePath)))) {
-      // The tar contains entries that would be written outside of the
-      // destination. That doesn't happen by accident, assume that the tar file
-      // is malicious.
-      await reader.cancel();
-      throw FormatException('Invalid tar entry: `${entry.name}`');
+  /// Verifies that [path] does not collide with an existing symlink or
+  /// incompatible entity type.
+  void ensureNoPathCollision(
+    String path, {
+    required String entryName,
+    required bool isDirectory,
+  }) {
+    final existingType = FileSystemEntity.typeSync(path, followLinks: false);
+    if (existingType == FileSystemEntityType.link) {
+      throw FormatException(
+        'Invalid tar entry: `$entryName` collides with a symlink',
+      );
     }
+    if (isDirectory &&
+        existingType != FileSystemEntityType.notFound &&
+        existingType != FileSystemEntityType.directory) {
+      throw FormatException(
+        'Invalid tar entry: `$entryName` collides with an existing file',
+      );
+    }
+    if (!isDirectory && existingType == FileSystemEntityType.directory) {
+      throw FormatException(
+        'Invalid tar entry: `$entryName` collides with an existing directory',
+      );
+    }
+  }
 
-    final parentDirectory = p.dirname(filePath);
+  bool isAbsoluteOrDriveQualified(String linkTarget) =>
+      p.posix.isAbsolute(linkTarget) ||
+      p.isAbsolute(linkTarget) ||
+      linkTarget.startsWith(r'\') ||
+      _windowsDrivePrefix.hasMatch(linkTarget);
 
-    bool checkValidTarget(String linkTarget) {
-      final isValid = p.isWithin(destination, linkTarget);
-      if (!isValid) {
-        log.fine('Skipping ${entry.name}: Invalid link target');
+  try {
+    // Pass 1: extract directories and regular files only, deferring all links
+    // until no more files or directories will be written.
+    while (await reader.moveNext()) {
+      final entry = reader.current;
+
+      if (entry.name.contains('\x00')) {
+        throw FormatException('Invalid tar entry: `${entry.name}`');
       }
 
-      return isValid;
-    }
-
-    switch (entry.type) {
-      case TypeFlag.dir:
-        ensureDir(filePath);
-        break;
-      case TypeFlag.reg:
-      case TypeFlag.regA:
-        // Regular file
-        deleteIfLink(filePath);
-        ensureDir(parentDirectory);
-        await createFileFromStream(entry.contents, filePath);
-
-        if (platform.isLinux || platform.isMacOS) {
-          // Apply executable bits from tar header, but don't change r/w bits
-          // from the default
-          final mode = _defaultMode | (entry.header.mode & _executableMask);
-
-          if (mode != _defaultMode) {
-            chmod(mode, filePath);
-          }
-        }
-        break;
-      case TypeFlag.symlink:
-        // Link to another file in this tar, relative from this entry.
-        final resolvedTarget = p.joinAll([
-          parentDirectory,
-          ...p.posix.split(entry.header.linkName!),
-        ]);
-        if (!checkValidTarget(resolvedTarget)) {
-          // Don't allow links to files outside of this tar.
-          break;
-        }
-
-        ensureDir(parentDirectory);
-        createSymlink(
-          p.relative(resolvedTarget, from: parentDirectory),
-          filePath,
+      final filePath = p.normalize(
+        p.joinAll([
+          destination,
+          // Tar file names always use forward slashes
+          ...p.posix.split(entry.name),
+        ]),
+      );
+      if (!paths.add(filePath)) {
+        // The tar file contained the same entry twice. Assume it is broken.
+        throw FormatException(
+          'Tar file contained duplicate path ${entry.name}',
         );
-        break;
-      case TypeFlag.link:
-        // We generate hardlinks as symlinks too, but their linkName is relative
-        // to the root of the tar file (unlike symlink entries, whose linkName
-        // is relative to the entry itself).
-        final fromDestination = p.join(destination, entry.header.linkName);
-        if (!checkValidTarget(fromDestination)) {
-          break; // Link points outside of the tar file.
-        }
+      }
 
-        final fromFile = p.relative(fromDestination, from: parentDirectory);
-        ensureDir(parentDirectory);
-        createSymlink(fromFile, filePath);
-        break;
-      default:
-        // Only extract files
-        continue;
+      if (!(p.isWithin(destination, filePath) ||
+          // allow including '.' as an entry in the tar.gz archive.
+          (entry.type == TypeFlag.dir && p.equals(destination, filePath)))) {
+        // The tar contains entries that would be written outside of the
+        // destination. That doesn't happen by accident, assume that the tar
+        // file is malicious.
+        throw FormatException('Invalid tar entry: `${entry.name}`');
+      }
+
+      switch (entry.type) {
+        case TypeFlag.dir:
+          ensureNoSymlinkAncestors(filePath, entryName: entry.name);
+          if (!p.equals(destination, filePath)) {
+            ensureNoPathCollision(
+              filePath,
+              entryName: entry.name,
+              isDirectory: true,
+            );
+          }
+          ensureDir(filePath);
+        case TypeFlag.reg:
+        case TypeFlag.regA:
+          ensureNoSymlinkAncestors(filePath, entryName: entry.name);
+          ensureNoPathCollision(
+            filePath,
+            entryName: entry.name,
+            isDirectory: false,
+          );
+          ensureDir(p.dirname(filePath));
+          await createFileFromStream(entry.contents, filePath);
+
+          if (platform.isLinux || platform.isMacOS) {
+            // Apply executable bits from tar header, but don't change r/w bits
+            // from the default
+            final mode = _defaultMode | (entry.header.mode & _executableMask);
+
+            if (mode != _defaultMode) {
+              chmod(mode, filePath);
+            }
+          }
+        case TypeFlag.symlink:
+        case TypeFlag.link:
+          pendingLinks.add((
+            name: entry.name,
+            type: entry.type,
+            filePath: filePath,
+            linkName: entry.header.linkName,
+          ));
+        default:
+          // Only extract files
+          continue;
+      }
     }
+  } finally {
+    await reader.cancel();
+  }
+
+  // Pass 2: create deferred symlinks and hardlinks after all directories and
+  // regular files are in place, ensuring no link is created through another
+  // symlink or overwrites an existing entry.
+  for (final link in pendingLinks) {
+    final linkName = link.linkName;
+    if (linkName == null || linkName.isEmpty || linkName.contains('\x00')) {
+      throw FormatException('Invalid tar link entry: `${link.name}`');
+    }
+
+    ensureNoSymlinkAncestors(link.filePath, entryName: link.name);
+
+    final existingType = FileSystemEntity.typeSync(
+      link.filePath,
+      followLinks: false,
+    );
+    if (existingType != FileSystemEntityType.notFound) {
+      throw FormatException(
+        'Tar file contained conflicting path `${link.name}`',
+      );
+    }
+
+    if (isAbsoluteOrDriveQualified(linkName)) {
+      log.fine('Skipping ${link.name}: Invalid link target');
+      continue;
+    }
+
+    final parentDirectory = p.dirname(link.filePath);
+    final resolvedTarget = switch (link.type) {
+      // Link to another file in this tar, relative from this entry.
+      TypeFlag.symlink => p.normalize(
+        p.joinAll([parentDirectory, ...p.posix.split(linkName)]),
+      ),
+      // We generate hardlinks as symlinks too, but their linkName is relative
+      // to the root of the tar file (unlike symlink entries, whose linkName
+      // is relative to the entry itself).
+      TypeFlag.link => p.normalize(
+        p.joinAll([destination, ...p.posix.split(linkName)]),
+      ),
+      _ => throw StateError('Unreachable'),
+    };
+    if (!p.isWithin(destination, resolvedTarget)) {
+      // Don't allow links to files outside of this tar.
+      log.fine('Skipping ${link.name}: Invalid link target');
+      continue;
+    }
+
+    final relativeTarget = p.relative(resolvedTarget, from: parentDirectory);
+    ensureDir(parentDirectory);
+    createSymlink(relativeTarget, link.filePath);
   }
 
   log.fine('Extracted .tar.gz to $destination.');
